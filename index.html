@@ -8,24 +8,20 @@
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
         h2 { margin-top: 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Estilos base de inputs */
         input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
         input:focus, textarea:focus { outline: none; border-color: #d4a373; }
         
-        /* Botones */
         button { background-color: #d4a373; color: #000; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-top: 10px; }
         button.secondary { background-color: #2c2c2e; color: #fff; }
-        button.add-btn { background-color: #2c2c2e; color: #d4a373; border: 1px dashed #d4a373; margin-top: 0; }
+        button.add-btn { background-color: #2c2c2e; color: #d4a373; border: 1px dashed #d4a373; margin-top: 5px; margin-bottom: 15px; }
         
         .hidden { display: none; }
         
-        /* Estilos del formulario tipo foto */
         .form-group { margin-bottom: 15px; }
         .form-label { display: block; color: #d4a373; font-size: 12px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         .input-row { display: flex; gap: 10px; }
         .btn-gps { width: auto; background-color: #2c2c2e; color: #d4a373; padding: 0 15px; margin-bottom: 15px; font-weight: bold; }
         
-        /* Tarjetas de resultados y relacionales */
         .card { background-color: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #d4a373; }
         .card-header { font-size: 12px; color: #8e8e93; margin-bottom: 8px; display: flex; justify-content: space-between; }
         .card-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
@@ -40,7 +36,6 @@
 </head>
 <body>
 
-    <!-- PANTALLA DE ACCESO -->
     <div id="login-screen">
         <h2>Identificación Operativa</h2>
         <input type="password" id="pinInput" placeholder="Introduce PIN de acceso" inputmode="numeric" pattern="[0-9]*">
@@ -48,7 +43,6 @@
         <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
     </div>
 
-    <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen" class="hidden">
         <h2>Gestión Operativa</h2>
         <button onclick="mostrar('form-screen')">📞 Registrar Llamada / Aviso</button>
@@ -57,21 +51,21 @@
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- PANTALLA DE REGISTRO (Basada en tu foto) -->
     <div id="form-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>📞 Registrar Llamada / Aviso</h2>
+            <h2>📞 Registrar Aviso</h2>
             <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
         </div>
 
         <div class="form-group">
             <label class="form-label">🕒 Fecha y Hora</label>
-            <input type="text" id="fechaHora" disabled style="color: #8e8e93;">
+            <!-- Cambiado a datetime-local para invocar el calendario de iOS -->
+            <input type="datetime-local" id="fechaHora">
         </div>
 
         <div class="form-group">
             <label class="form-label">📞 Teléfono Requirente</label>
-            <input type="text" id="telefono" placeholder="Nº de teléfono o 'Número Privado'" inputmode="tel">
+            <input type="tel" id="telefono" placeholder="Nº de teléfono">
         </div>
 
         <div class="form-group">
@@ -97,28 +91,33 @@
             <textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea>
         </div>
 
-        <!-- SECCIÓN DE IDENTIFICADOS VINCULADOS A ESTE AVISO -->
+        <!-- SECCIÓN DIVIDIDA: PERSONAS Y VEHÍCULOS -->
         <div class="form-group" style="background-color: #151518; padding: 15px; border-radius: 8px; border: 1px solid #2c2c2e;">
-            <label class="form-label" style="color: #fff;">🔗 Personas y Vehículos Implicados</label>
-            <p style="font-size: 12px; color: #8e8e93; margin-top: 0;">Añade los identificados para vincularlos a esta intervención.</p>
+            <label class="form-label" style="color: #fff; margin-bottom: 10px;">🔗 Implicados en la intervención</label>
             
-            <div id="lista-implicados-temp"></div>
-            
-            <div class="input-row" style="margin-top: 10px;">
-                <select id="tipoImplicado" style="margin-bottom: 0;">
-                    <option value="persona">👤 Persona</option>
-                    <option value="vehiculo">🚗 Vehículo</option>
-                </select>
-                <input type="text" id="datoImplicado" placeholder="DNI / Matrícula" style="margin-bottom: 0; text-transform: uppercase;">
+            <!-- AÑADIR PERSONA -->
+            <div style="background-color: #1c1c1e; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                <label style="font-size: 12px; color: #30d158; font-weight: bold;">👤 AÑADIR PERSONA</label>
+                <input type="text" id="dniPer" placeholder="DNI / NIE / Pasaporte" style="text-transform: uppercase; margin-top: 8px; margin-bottom: 8px;">
+                <input type="text" id="nombrePer" placeholder="Nombre y apellidos" style="margin-bottom: 8px;">
+                <button class="add-btn" onclick="añadirImplicado('persona')">&plus; Vincular Persona</button>
             </div>
-            <input type="text" id="notaImplicado" placeholder="Nombre / Marca / Detalles" style="margin-top: 10px; margin-bottom: 10px;">
-            <button class="add-btn" onclick="añadirImplicado()">&plus; Añadir Implicado a la Lista</button>
+
+            <!-- AÑADIR VEHÍCULO -->
+            <div style="background-color: #1c1c1e; padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; color: #5e5ce6; font-weight: bold;">🚗 AÑADIR VEHÍCULO</label>
+                <input type="text" id="matVeh" placeholder="Matrícula" style="text-transform: uppercase; margin-top: 8px; margin-bottom: 8px;">
+                <input type="text" id="descVeh" placeholder="Marca, modelo y color" style="margin-bottom: 8px;">
+                <button class="add-btn" onclick="añadirImplicado('vehiculo')">&plus; Vincular Vehículo</button>
+            </div>
+
+            <!-- LISTA DE AÑADIDOS -->
+            <div id="lista-implicados-temp" style="margin-top: 15px;"></div>
         </div>
         
-        <button onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 20px;">Guardar Aviso</button>
+        <button onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
-    <!-- PANTALLA DE BÚSQUEDA -->
     <div id="search-screen" class="hidden">
         <h2>Buscador Operativo</h2>
         <input type="text" id="busqueda" placeholder="Buscar DNI, Matrícula o Motivo..." onkeyup="ejecutarBusqueda()" style="text-transform: uppercase;">
@@ -129,28 +128,21 @@
         <div id="resultados-intervenciones"></div>
     </div>
 
-    <!-- PANTALLA DE UTILIDADES -->
     <div id="tools-screen" class="hidden">
         <h2>Normativa y Enlaces</h2>
-        <p style="font-size: 13px; color: #8e8e93;">Los enlaces se abrirán de forma segura en una nueva pestaña.</p>
-        
         <a href="https://www.boe.es/biblioteca_juridica/codigos/codigo.php?id=020_Codigo_de_Trafico_y_Seguridad_Vial" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">📖 BOE: Código de Tráfico y Seg. Vial</button>
+            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">📖 BOE: Código de Tráfico</button>
         </a>
-
         <a href="https://www.ofesauto.es/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">🌍 OFESAUTO (Matrículas Extranjeras)</button>
+            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">🌍 OFESAUTO (Matrículas)</button>
         </a>
-
         <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 30px;">Volver</button>
     </div>
 
     <script>
-        // Estructura de base de datos
         let db = JSON.parse(localStorage.getItem('db_policial_v2')) || [];
         let implicadosTemporales = [];
 
-        // --- SISTEMA DE ACCESO ---
         function acceder() {
             const pin = document.getElementById('pinInput').value;
             let pinGuardado = localStorage.getItem('pin_policial');
@@ -170,22 +162,29 @@
             mostrar('login-screen');
         }
 
-        // --- NAVEGACIÓN Y GPS ---
         function mostrar(pantalla) {
             document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(pantalla).classList.remove('hidden');
             
             if(pantalla === 'form-screen') {
-                document.getElementById('fechaHora').value = generarFechaEspanol();
+                configurarFechaActual();
                 implicadosTemporales = [];
                 actualizarListaImplicados();
             }
             if(pantalla === 'search-screen') ejecutarBusqueda(); 
         }
 
-        function generarFechaEspanol() {
-            const opciones = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return new Date().toLocaleDateString('es-ES', opciones).replace(',', '');
+        function configurarFechaActual() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('fechaHora').value = now.toISOString().slice(0, 16);
+        }
+
+        function formateaFecha(fechaISO) {
+            if(!fechaISO) return "";
+            const fecha = new Date(fechaISO);
+            const opciones = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return fecha.toLocaleDateString('es-ES', opciones).replace(',', '');
         }
 
         function obtenerGPS() {
@@ -194,23 +193,30 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => { inputLugar.value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`; },
-                    (err) => { inputLugar.value = ""; alert("No se pudo obtener la ubicación. Verifica los permisos de Safari."); },
+                    (err) => { inputLugar.value = ""; alert("No se pudo obtener la ubicación. Verifica permisos."); },
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
             }
         }
 
-        // --- LÓGICA DE REGISTRO CON IMPLICADOS ---
-        function añadirImplicado() {
-            const tipo = document.getElementById('tipoImplicado').value;
-            const dato = document.getElementById('datoImplicado').value.trim().toUpperCase();
-            const nota = document.getElementById('notaImplicado').value.trim();
+        function añadirImplicado(tipo) {
+            let dato = '', nota = '';
             
-            if(!dato) { alert("Debes introducir un DNI o Matrícula."); return; }
+            if (tipo === 'persona') {
+                dato = document.getElementById('dniPer').value.trim().toUpperCase();
+                nota = document.getElementById('nombrePer').value.trim();
+                if(!dato && !nota) return;
+                document.getElementById('dniPer').value = '';
+                document.getElementById('nombrePer').value = '';
+            } else {
+                dato = document.getElementById('matVeh').value.trim().toUpperCase();
+                nota = document.getElementById('descVeh').value.trim();
+                if(!dato && !nota) return;
+                document.getElementById('matVeh').value = '';
+                document.getElementById('descVeh').value = '';
+            }
             
             implicadosTemporales.push({ tipo, dato, nota });
-            document.getElementById('datoImplicado').value = '';
-            document.getElementById('notaImplicado').value = '';
             actualizarListaImplicados();
         }
 
@@ -219,9 +225,10 @@
             div.innerHTML = '';
             implicadosTemporales.forEach((imp, index) => {
                 const icono = imp.tipo === 'persona' ? '👤' : '🚗';
-                div.innerHTML += `<div style="background: #2c2c2e; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
+                const color = imp.tipo === 'persona' ? '#30d158' : '#5e5ce6';
+                div.innerHTML += `<div style="background: #2c2c2e; border-left: 3px solid ${color}; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
                     <span>${icono} <b>${imp.dato}</b> - ${imp.nota}</span>
-                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px;" onclick="borrarImplicado(${index})">X</span>
+                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px;" onclick="borrarImplicado(${index})">X</span>
                 </div>`;
             });
         }
@@ -235,11 +242,11 @@
             const motivo = document.getElementById('motivo').value.trim();
             if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
 
-            const numIntervencion = Math.floor(100000 + Math.random() * 900000); // Genera un ID de 6 cifras
+            const numIntervencion = Math.floor(100000 + Math.random() * 900000);
 
             const nuevaIntervencion = {
                 id: numIntervencion,
-                fecha: document.getElementById('fechaHora').value,
+                fechaISO: document.getElementById('fechaHora').value,
                 telefono: document.getElementById('telefono').value.trim(),
                 comunicante: document.getElementById('comunicante').value.trim(),
                 motivo: motivo,
@@ -251,37 +258,31 @@
             db.push(nuevaIntervencion);
             localStorage.setItem('db_policial_v2', JSON.stringify(db));
             
-            // Limpiar formulario
-            document.querySelectorAll('#form-screen input[type=text], #form-screen textarea').forEach(el => el.value = '');
+            document.querySelectorAll('#form-screen input[type=text], #form-screen input[type=tel], #form-screen textarea').forEach(el => el.value = '');
             alert(`Aviso Guardado. Intervención Nº: #${numIntervencion}`);
             mostrar('main-screen');
         }
 
-        // --- BUSCADOR INTELIGENTE RELACIONAL ---
         function ejecutarBusqueda() {
             const termino = document.getElementById('busqueda').value.toUpperCase();
-            
             const divVeh = document.getElementById('resultados-vehiculos');
             const divPer = document.getElementById('resultados-personas');
             const divInt = document.getElementById('resultados-intervenciones');
             
             divVeh.innerHTML = ''; divPer.innerHTML = ''; divInt.innerHTML = '';
-
             if(!termino) return;
 
             let htmlVeh = ''; let htmlPer = ''; let htmlInt = '';
 
-            // Bucle inverso para mostrar lo más reciente primero
             for (let i = db.length - 1; i >= 0; i--) {
                 const reg = db[i];
                 let intervencionMostrada = false;
+                const fechaFormateada = formateaFecha(reg.fechaISO);
 
-                // Buscar en implicados
                 if(reg.implicados && reg.implicados.length > 0) {
                     reg.implicados.forEach(imp => {
                         if(imp.dato.includes(termino) || imp.nota.toUpperCase().includes(termino)) {
                             
-                            // Buscar con quién más está relacionado en esta misma intervención
                             let relacionadosHtml = '';
                             let otrosImplicados = reg.implicados.filter(o => o.dato !== imp.dato);
                             if(otrosImplicados.length > 0) {
@@ -296,7 +297,7 @@
                                 <div class="card">
                                     <div class="card-header">
                                         <span>INT #${reg.id}</span>
-                                        <span>${reg.fecha}</span>
+                                        <span>${fechaFormateada}</span>
                                     </div>
                                     <div class="card-title"><span class="badge ${imp.tipo === 'vehiculo' ? 'badge-veh' : 'badge-per'}">${imp.tipo === 'vehiculo' ? 'VEHÍCULO' : 'PERSONA'}</span> ${imp.dato}</div>
                                     <div class="card-detail"><b>Detalles:</b> ${imp.nota}</div>
@@ -307,22 +308,23 @@
                             if(imp.tipo === 'vehiculo') htmlVeh += tarjeta;
                             else htmlPer += tarjeta;
                             
-                            intervencionMostrada = true; // Para no duplicar si también coincide el motivo
+                            intervencionMostrada = true;
                         }
                     });
                 }
 
-                // Buscar en los datos generales del aviso si no ha coincidido ya por implicado
                 if(!intervencionMostrada) {
                     if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || 
                        (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
-                       (reg.observaciones && reg.observaciones.toUpperCase().includes(termino))) {
+                       (reg.observaciones && reg.observaciones.toUpperCase().includes(termino)) ||
+                       (reg.telefono && reg.telefono.includes(termino)) ||
+                       (reg.comunicante && reg.comunicante.toUpperCase().includes(termino))) {
                         
                         htmlInt += `
                             <div class="card" style="border-left-color: #8e8e93;">
                                 <div class="card-header">
                                     <span>INT #${reg.id}</span>
-                                    <span>${reg.fecha}</span>
+                                    <span>${fechaFormateada}</span>
                                 </div>
                                 <div class="card-title">📞 Aviso: ${reg.motivo}</div>
                                 <div class="card-detail"><b>Lugar:</b> ${reg.lugar}</div>
