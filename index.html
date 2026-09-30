@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registro Operativo</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 20px; }
+        h2 { margin-top: 0; color: #fff; }
+        input, select, button { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
+        input, select { background-color: #1c1c1e; color: #fff; }
+        button { background-color: #0a84ff; color: #fff; font-weight: bold; cursor: pointer; }
+        button.secondary { background-color: #333; }
+        button.tool-btn { background-color: #2c2c2e; text-align: left; padding-left: 20px; border-left: 4px solid #30d158; }
+        .hidden { display: none; }
+        .card { background-color: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #0a84ff; }
+        .nav-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE ACCESO -->
+    <div id="login-screen">
+        <h2>Identificación</h2>
+        <input type="password" id="pinInput" placeholder="Introduce clave secreta" inputmode="numeric" pattern="[0-9]*">
+        <button onclick="acceder()">Entrar</button>
+        <p id="loginError" style="color: #ff453a; display: none;">Clave incorrecta.</p>
+        <p style="font-size: 13px; color: #8e8e93;">Si es tu primer acceso, escribe el PIN que desees usar a partir de ahora.</p>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="main-screen" class="hidden">
+        <h2>Menú Principal</h2>
+        <div class="nav-bar">
+            <button onclick="mostrar('form-screen')">📝 Nuevo Registro</button>
+            <button onclick="mostrar('search-screen')">🔍 Buscador</button>
+            <button onclick="mostrar('tools-screen')" style="background-color: #30d158; color: #000;">🛠 Utilidades y Enlaces</button>
+        </div>
+        <button class="secondary" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+
+    <!-- PANTALLA DE REGISTRO -->
+    <div id="form-screen" class="hidden">
+        <h2>Nueva Intervención</h2>
+        <input type="text" id="motivo" placeholder="Motivo (ej. Vado, Accidente)">
+        <input type="text" id="datoClave" placeholder="DNI, NIE o Matrícula" style="text-transform: uppercase;">
+        <input type="text" id="nombre" placeholder="Nombre completo o Marca/Modelo">
+        <input type="text" id="notas" placeholder="Notas adicionales">
+        
+        <button onclick="guardarRegistro()">Guardar Datos</button>
+        <button class="secondary" onclick="mostrar('main-screen')">Volver</button>
+    </div>
+
+    <!-- PANTALLA DE BÚSQUEDA -->
+    <div id="search-screen" class="hidden">
+        <h2>Buscador</h2>
+        <input type="text" id="busqueda" placeholder="Buscar DNI, matrícula o motivo..." onkeyup="buscar()" style="text-transform: uppercase;">
+        <button class="secondary" onclick="mostrar('main-screen')">Volver</button>
+        <div id="resultados" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- PANTALLA DE UTILIDADES -->
+    <div id="tools-screen" class="hidden">
+        <h2>Utilidades Policiales</h2>
+        
+        <!-- ENLACE 1: CODIFICADO -->
+        <!-- Cambia el texto entre las comillas de href="..." por tu enlace directo al PDF si tienes uno mejor -->
+        <a href="https://www.dgt.es/conoce-la-dgt/normativa/" target="_blank" style="text-decoration: none;">
+            <button class="tool-btn">📖 Codificado de Tráfico (DGT)</button>
+        </a>
+
+        <!-- ENLACE 2: SEGUROS EXTRANJEROS -->
+        <a href="https://www.ofesauto.es/consulta-de-matriculas-extranjeras/" target="_blank" style="text-decoration: none;">
+            <button class="tool-btn">🌍 Seguro Matrículas Extranjeras (OFESAUTO)</button>
+        </a>
+        
+        <!-- ENLACE 3: EJEMPLO ORDENANZA LOCAL (Puedes modificarlo) -->
+        <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2015-11722" target="_blank" style="text-decoration: none;">
+            <button class="tool-btn">⚖️ Ley Orgánica 4/2015 (Seguridad Ciudadana)</button>
+        </a>
+
+        <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 20px;">Volver</button>
+    </div>
+
+    <script>
+        let registros = JSON.parse(localStorage.getItem('db_policial')) || [];
+        
+        function acceder() {
+            const pin = document.getElementById('pinInput').value;
+            let pinGuardado = localStorage.getItem('pin_policial');
+            
+            if (!pinGuardado) {
+                if(pin.length < 4) { alert("La clave debe tener al menos 4 caracteres."); return; }
+                localStorage.setItem('pin_policial', pin);
+                alert("PIN maestro configurado con éxito.");
+                mostrar('main-screen');
+            } else if (pin === pinGuardado) {
+                mostrar('main-screen');
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function cerrarSesion() {
+            document.getElementById('pinInput').value = '';
+            mostrar('login-screen');
+        }
+
+        function mostrar(pantalla) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.add('hidden');
+            document.getElementById('form-screen').classList.add('hidden');
+            document.getElementById('search-screen').classList.add('hidden');
+            document.getElementById('tools-screen').classList.add('hidden');
+            
+            document.getElementById(pantalla).classList.remove('hidden');
+            if(pantalla === 'search-screen') buscar(); 
+        }
+
+        function guardarRegistro() {
+            const motivo = document.getElementById('motivo').value.trim();
+            const dato = document.getElementById('datoClave').value.trim().toUpperCase();
+            
+            if (!motivo && !dato) {
+                alert("Debes rellenar al menos el motivo o la identificación.");
+                return;
+            }
+
+            const nuevoRegistro = {
+                id: Date.now(),
+                fecha: new Date().toLocaleString('es-ES'),
+                motivo: motivo,
+                datoClave: dato,
+                nombre: document.getElementById('nombre').value.trim(),
+                notas: document.getElementById('notas').value.trim()
+            };
+
+            registros.push(nuevoRegistro);
+            localStorage.setItem('db_policial', JSON.stringify(registros));
+            
+            document.getElementById('motivo').value = '';
+            document.getElementById('datoClave').value = '';
+            document.getElementById('nombre').value = '';
+            document.getElementById('notas').value = '';
+            
+            alert("Intervención registrada correctamente.");
+            mostrar('main-screen');
+        }
+
+        function buscar() {
+            const termino = document.getElementById('busqueda').value.toUpperCase();
+            const divResultados = document.getElementById('resultados');
+            divResultados.innerHTML = '';
+
+            const filtrados = registros.filter(r => 
+                (r.datoClave && r.datoClave.includes(termino)) || 
+                (r.motivo && r.motivo.toUpperCase().includes(termino)) ||
+                (r.nombre && r.nombre.toUpperCase().includes(termino))
+            );
+
+            if (filtrados.length === 0) {
+                divResultados.innerHTML = '<p style="color:#8e8e93;">No hay resultados.</p>';
+                return;
+            }
+
+            filtrados.reverse().forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div style="font-size: 12px; color: #0a84ff; margin-bottom: 5px;">${r.fecha}</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">${r.datoClave || 'Sin ID'} - ${r.nombre || ''}</div>
+                    <div style="margin-bottom: 5px;"><strong>Motivo:</strong> ${r.motivo || 'N/A'}</div>
+                    <div style="font-size: 14px; color: #d1d1d6;">${r.notas}</div>
+                `;
+                divResultados.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
