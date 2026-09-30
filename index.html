@@ -5,94 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registro Operativo</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 20px; }
-        h2 { margin-top: 0; color: #fff; }
-        input, select, button { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
-        input, select { background-color: #1c1c1e; color: #fff; }
-        button { background-color: #0a84ff; color: #fff; font-weight: bold; cursor: pointer; }
-        button.secondary { background-color: #333; }
-        button.tool-btn { background-color: #2c2c2e; text-align: left; padding-left: 20px; border-left: 4px solid #30d158; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
+        h2 { margin-top: 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Estilos base de inputs */
+        input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
+        input:focus, textarea:focus { outline: none; border-color: #d4a373; }
+        
+        /* Botones */
+        button { background-color: #d4a373; color: #000; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-top: 10px; }
+        button.secondary { background-color: #2c2c2e; color: #fff; }
+        button.add-btn { background-color: #2c2c2e; color: #d4a373; border: 1px dashed #d4a373; margin-top: 0; }
+        
         .hidden { display: none; }
-        .card { background-color: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #0a84ff; }
-        .nav-bar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        
+        /* Estilos del formulario tipo foto */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; color: #d4a373; font-size: 12px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .input-row { display: flex; gap: 10px; }
+        .btn-gps { width: auto; background-color: #2c2c2e; color: #d4a373; padding: 0 15px; margin-bottom: 15px; font-weight: bold; }
+        
+        /* Tarjetas de resultados y relacionales */
+        .card { background-color: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #d4a373; }
+        .card-header { font-size: 12px; color: #8e8e93; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .card-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .card-detail { font-size: 14px; color: #d1d1d6; margin-bottom: 4px; }
+        .relation-box { background-color: #2c2c2e; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 13px; border-left: 2px solid #30d158; }
+        
+        .section-title { color: #8e8e93; font-size: 14px; margin: 20px 0 10px 0; border-bottom: 1px solid #2c2c2e; padding-bottom: 5px; }
+        .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 5px; background-color: #333; }
+        .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
+        .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
     </style>
 </head>
 <body>
 
     <!-- PANTALLA DE ACCESO -->
     <div id="login-screen">
-        <h2>Identificación</h2>
-        <input type="password" id="pinInput" placeholder="Introduce clave secreta" inputmode="numeric" pattern="[0-9]*">
+        <h2>Identificación Operativa</h2>
+        <input type="password" id="pinInput" placeholder="Introduce PIN de acceso" inputmode="numeric" pattern="[0-9]*">
         <button onclick="acceder()">Entrar</button>
-        <p id="loginError" style="color: #ff453a; display: none;">Clave incorrecta.</p>
-        <p style="font-size: 13px; color: #8e8e93;">Si es tu primer acceso, escribe el PIN que desees usar a partir de ahora.</p>
+        <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
     </div>
 
     <!-- PANTALLA PRINCIPAL -->
     <div id="main-screen" class="hidden">
-        <h2>Menú Principal</h2>
-        <div class="nav-bar">
-            <button onclick="mostrar('form-screen')">📝 Nuevo Registro</button>
-            <button onclick="mostrar('search-screen')">🔍 Buscador</button>
-            <button onclick="mostrar('tools-screen')" style="background-color: #30d158; color: #000;">🛠 Utilidades y Enlaces</button>
-        </div>
-        <button class="secondary" onclick="cerrarSesion()">Cerrar Sesión</button>
+        <h2>Gestión Operativa</h2>
+        <button onclick="mostrar('form-screen')">📞 Registrar Llamada / Aviso</button>
+        <button onclick="mostrar('search-screen')">🔍 Buscador e Historial</button>
+        <button onclick="mostrar('tools-screen')" class="secondary">🛠 Normativa y Enlaces</button>
+        <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- PANTALLA DE REGISTRO -->
+    <!-- PANTALLA DE REGISTRO (Basada en tu foto) -->
     <div id="form-screen" class="hidden">
-        <h2>Nueva Intervención</h2>
-        <input type="text" id="motivo" placeholder="Motivo (ej. Vado, Accidente)">
-        <input type="text" id="datoClave" placeholder="DNI, NIE o Matrícula" style="text-transform: uppercase;">
-        <input type="text" id="nombre" placeholder="Nombre completo o Marca/Modelo">
-        <input type="text" id="notas" placeholder="Notas adicionales">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>📞 Registrar Llamada / Aviso</h2>
+            <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">🕒 Fecha y Hora</label>
+            <input type="text" id="fechaHora" disabled style="color: #8e8e93;">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">📞 Teléfono Requirente</label>
+            <input type="text" id="telefono" placeholder="Nº de teléfono o 'Número Privado'" inputmode="tel">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">👤 Nombre del Comunicante</label>
+            <input type="text" id="comunicante" placeholder="Nombre completo del comunicante">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">🎯 Motivo de la Llamada</label>
+            <input type="text" id="motivo" placeholder="Ej: Vado permanente, Ruido, Alarma...">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">📍 Lugar de los Hechos</label>
+            <div class="input-row">
+                <input type="text" id="lugar" placeholder="Lugar, calle o número exacto...">
+                <button class="btn-gps" onclick="obtenerGPS()">📍 GPS</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">📝 Observaciones</label>
+            <textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea>
+        </div>
+
+        <!-- SECCIÓN DE IDENTIFICADOS VINCULADOS A ESTE AVISO -->
+        <div class="form-group" style="background-color: #151518; padding: 15px; border-radius: 8px; border: 1px solid #2c2c2e;">
+            <label class="form-label" style="color: #fff;">🔗 Personas y Vehículos Implicados</label>
+            <p style="font-size: 12px; color: #8e8e93; margin-top: 0;">Añade los identificados para vincularlos a esta intervención.</p>
+            
+            <div id="lista-implicados-temp"></div>
+            
+            <div class="input-row" style="margin-top: 10px;">
+                <select id="tipoImplicado" style="margin-bottom: 0;">
+                    <option value="persona">👤 Persona</option>
+                    <option value="vehiculo">🚗 Vehículo</option>
+                </select>
+                <input type="text" id="datoImplicado" placeholder="DNI / Matrícula" style="margin-bottom: 0; text-transform: uppercase;">
+            </div>
+            <input type="text" id="notaImplicado" placeholder="Nombre / Marca / Detalles" style="margin-top: 10px; margin-bottom: 10px;">
+            <button class="add-btn" onclick="añadirImplicado()">&plus; Añadir Implicado a la Lista</button>
+        </div>
         
-        <button onclick="guardarRegistro()">Guardar Datos</button>
-        <button class="secondary" onclick="mostrar('main-screen')">Volver</button>
+        <button onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 20px;">Guardar Aviso</button>
     </div>
 
     <!-- PANTALLA DE BÚSQUEDA -->
     <div id="search-screen" class="hidden">
-        <h2>Buscador</h2>
-        <input type="text" id="busqueda" placeholder="Buscar DNI, matrícula o motivo..." onkeyup="buscar()" style="text-transform: uppercase;">
-        <button class="secondary" onclick="mostrar('main-screen')">Volver</button>
-        <div id="resultados" style="margin-top: 15px;"></div>
+        <h2>Buscador Operativo</h2>
+        <input type="text" id="busqueda" placeholder="Buscar DNI, Matrícula o Motivo..." onkeyup="ejecutarBusqueda()" style="text-transform: uppercase;">
+        <button class="secondary" onclick="mostrar('main-screen')">Volver al Menú</button>
+        
+        <div id="resultados-vehiculos"></div>
+        <div id="resultados-personas"></div>
+        <div id="resultados-intervenciones"></div>
     </div>
 
     <!-- PANTALLA DE UTILIDADES -->
     <div id="tools-screen" class="hidden">
-        <h2>Utilidades Policiales</h2>
+        <h2>Normativa y Enlaces</h2>
+        <p style="font-size: 13px; color: #8e8e93;">Los enlaces se abrirán de forma segura en una nueva pestaña.</p>
         
-        <!-- ENLACE 1: CODIFICADO -->
-        <!-- Cambia el texto entre las comillas de href="..." por tu enlace directo al PDF si tienes uno mejor -->
-        <a href="https://www.dgt.es/conoce-la-dgt/normativa/" target="_blank" style="text-decoration: none;">
-            <button class="tool-btn">📖 Codificado de Tráfico (DGT)</button>
+        <a href="https://www.boe.es/biblioteca_juridica/codigos/codigo.php?id=020_Codigo_de_Trafico_y_Seguridad_Vial" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">📖 BOE: Código de Tráfico y Seg. Vial</button>
         </a>
 
-        <!-- ENLACE 2: SEGUROS EXTRANJEROS -->
-        <a href="https://www.ofesauto.es/consulta-de-matriculas-extranjeras/" target="_blank" style="text-decoration: none;">
-            <button class="tool-btn">🌍 Seguro Matrículas Extranjeras (OFESAUTO)</button>
-        </a>
-        
-        <!-- ENLACE 3: EJEMPLO ORDENANZA LOCAL (Puedes modificarlo) -->
-        <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2015-11722" target="_blank" style="text-decoration: none;">
-            <button class="tool-btn">⚖️ Ley Orgánica 4/2015 (Seguridad Ciudadana)</button>
+        <a href="https://www.ofesauto.es/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">🌍 OFESAUTO (Matrículas Extranjeras)</button>
         </a>
 
-        <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 20px;">Volver</button>
+        <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 30px;">Volver</button>
     </div>
 
     <script>
-        let registros = JSON.parse(localStorage.getItem('db_policial')) || [];
-        
+        // Estructura de base de datos
+        let db = JSON.parse(localStorage.getItem('db_policial_v2')) || [];
+        let implicadosTemporales = [];
+
+        // --- SISTEMA DE ACCESO ---
         function acceder() {
             const pin = document.getElementById('pinInput').value;
             let pinGuardado = localStorage.getItem('pin_policial');
-            
             if (!pinGuardado) {
-                if(pin.length < 4) { alert("La clave debe tener al menos 4 caracteres."); return; }
+                if(pin.length < 4) { alert("Mínimo 4 dígitos."); return; }
                 localStorage.setItem('pin_policial', pin);
-                alert("PIN maestro configurado con éxito.");
                 mostrar('main-screen');
             } else if (pin === pinGuardado) {
                 mostrar('main-screen');
@@ -106,74 +170,175 @@
             mostrar('login-screen');
         }
 
+        // --- NAVEGACIÓN Y GPS ---
         function mostrar(pantalla) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.add('hidden');
-            document.getElementById('form-screen').classList.add('hidden');
-            document.getElementById('search-screen').classList.add('hidden');
-            document.getElementById('tools-screen').classList.add('hidden');
-            
+            document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(pantalla).classList.remove('hidden');
-            if(pantalla === 'search-screen') buscar(); 
+            
+            if(pantalla === 'form-screen') {
+                document.getElementById('fechaHora').value = generarFechaEspanol();
+                implicadosTemporales = [];
+                actualizarListaImplicados();
+            }
+            if(pantalla === 'search-screen') ejecutarBusqueda(); 
         }
 
-        function guardarRegistro() {
-            const motivo = document.getElementById('motivo').value.trim();
-            const dato = document.getElementById('datoClave').value.trim().toUpperCase();
-            
-            if (!motivo && !dato) {
-                alert("Debes rellenar al menos el motivo o la identificación.");
-                return;
-            }
+        function generarFechaEspanol() {
+            const opciones = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date().toLocaleDateString('es-ES', opciones).replace(',', '');
+        }
 
-            const nuevoRegistro = {
-                id: Date.now(),
-                fecha: new Date().toLocaleString('es-ES'),
+        function obtenerGPS() {
+            const inputLugar = document.getElementById('lugar');
+            inputLugar.value = "Obteniendo coordenadas...";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { inputLugar.value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`; },
+                    (err) => { inputLugar.value = ""; alert("No se pudo obtener la ubicación. Verifica los permisos de Safari."); },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        }
+
+        // --- LÓGICA DE REGISTRO CON IMPLICADOS ---
+        function añadirImplicado() {
+            const tipo = document.getElementById('tipoImplicado').value;
+            const dato = document.getElementById('datoImplicado').value.trim().toUpperCase();
+            const nota = document.getElementById('notaImplicado').value.trim();
+            
+            if(!dato) { alert("Debes introducir un DNI o Matrícula."); return; }
+            
+            implicadosTemporales.push({ tipo, dato, nota });
+            document.getElementById('datoImplicado').value = '';
+            document.getElementById('notaImplicado').value = '';
+            actualizarListaImplicados();
+        }
+
+        function actualizarListaImplicados() {
+            const div = document.getElementById('lista-implicados-temp');
+            div.innerHTML = '';
+            implicadosTemporales.forEach((imp, index) => {
+                const icono = imp.tipo === 'persona' ? '👤' : '🚗';
+                div.innerHTML += `<div style="background: #2c2c2e; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
+                    <span>${icono} <b>${imp.dato}</b> - ${imp.nota}</span>
+                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px;" onclick="borrarImplicado(${index})">X</span>
+                </div>`;
+            });
+        }
+
+        function borrarImplicado(index) {
+            implicadosTemporales.splice(index, 1);
+            actualizarListaImplicados();
+        }
+
+        function guardarAviso() {
+            const motivo = document.getElementById('motivo').value.trim();
+            if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
+
+            const numIntervencion = Math.floor(100000 + Math.random() * 900000); // Genera un ID de 6 cifras
+
+            const nuevaIntervencion = {
+                id: numIntervencion,
+                fecha: document.getElementById('fechaHora').value,
+                telefono: document.getElementById('telefono').value.trim(),
+                comunicante: document.getElementById('comunicante').value.trim(),
                 motivo: motivo,
-                datoClave: dato,
-                nombre: document.getElementById('nombre').value.trim(),
-                notas: document.getElementById('notas').value.trim()
+                lugar: document.getElementById('lugar').value.trim(),
+                observaciones: document.getElementById('observaciones').value.trim(),
+                implicados: [...implicadosTemporales]
             };
 
-            registros.push(nuevoRegistro);
-            localStorage.setItem('db_policial', JSON.stringify(registros));
+            db.push(nuevaIntervencion);
+            localStorage.setItem('db_policial_v2', JSON.stringify(db));
             
-            document.getElementById('motivo').value = '';
-            document.getElementById('datoClave').value = '';
-            document.getElementById('nombre').value = '';
-            document.getElementById('notas').value = '';
-            
-            alert("Intervención registrada correctamente.");
+            // Limpiar formulario
+            document.querySelectorAll('#form-screen input[type=text], #form-screen textarea').forEach(el => el.value = '');
+            alert(`Aviso Guardado. Intervención Nº: #${numIntervencion}`);
             mostrar('main-screen');
         }
 
-        function buscar() {
+        // --- BUSCADOR INTELIGENTE RELACIONAL ---
+        function ejecutarBusqueda() {
             const termino = document.getElementById('busqueda').value.toUpperCase();
-            const divResultados = document.getElementById('resultados');
-            divResultados.innerHTML = '';
+            
+            const divVeh = document.getElementById('resultados-vehiculos');
+            const divPer = document.getElementById('resultados-personas');
+            const divInt = document.getElementById('resultados-intervenciones');
+            
+            divVeh.innerHTML = ''; divPer.innerHTML = ''; divInt.innerHTML = '';
 
-            const filtrados = registros.filter(r => 
-                (r.datoClave && r.datoClave.includes(termino)) || 
-                (r.motivo && r.motivo.toUpperCase().includes(termino)) ||
-                (r.nombre && r.nombre.toUpperCase().includes(termino))
-            );
+            if(!termino) return;
 
-            if (filtrados.length === 0) {
-                divResultados.innerHTML = '<p style="color:#8e8e93;">No hay resultados.</p>';
-                return;
+            let htmlVeh = ''; let htmlPer = ''; let htmlInt = '';
+
+            // Bucle inverso para mostrar lo más reciente primero
+            for (let i = db.length - 1; i >= 0; i--) {
+                const reg = db[i];
+                let intervencionMostrada = false;
+
+                // Buscar en implicados
+                if(reg.implicados && reg.implicados.length > 0) {
+                    reg.implicados.forEach(imp => {
+                        if(imp.dato.includes(termino) || imp.nota.toUpperCase().includes(termino)) {
+                            
+                            // Buscar con quién más está relacionado en esta misma intervención
+                            let relacionadosHtml = '';
+                            let otrosImplicados = reg.implicados.filter(o => o.dato !== imp.dato);
+                            if(otrosImplicados.length > 0) {
+                                relacionadosHtml = `<div class="relation-box"><b>Relacionado en la Intervención #${reg.id}:</b><br>`;
+                                otrosImplicados.forEach(o => {
+                                    relacionadosHtml += `↳ ${o.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${o.dato} (${o.nota})<br>`;
+                                });
+                                relacionadosHtml += `</div>`;
+                            }
+
+                            const tarjeta = `
+                                <div class="card">
+                                    <div class="card-header">
+                                        <span>INT #${reg.id}</span>
+                                        <span>${reg.fecha}</span>
+                                    </div>
+                                    <div class="card-title"><span class="badge ${imp.tipo === 'vehiculo' ? 'badge-veh' : 'badge-per'}">${imp.tipo === 'vehiculo' ? 'VEHÍCULO' : 'PERSONA'}</span> ${imp.dato}</div>
+                                    <div class="card-detail"><b>Detalles:</b> ${imp.nota}</div>
+                                    <div class="card-detail"><b>Motivo Aviso:</b> ${reg.motivo}</div>
+                                    ${relacionadosHtml}
+                                </div>`;
+
+                            if(imp.tipo === 'vehiculo') htmlVeh += tarjeta;
+                            else htmlPer += tarjeta;
+                            
+                            intervencionMostrada = true; // Para no duplicar si también coincide el motivo
+                        }
+                    });
+                }
+
+                // Buscar en los datos generales del aviso si no ha coincidido ya por implicado
+                if(!intervencionMostrada) {
+                    if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || 
+                       (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
+                       (reg.observaciones && reg.observaciones.toUpperCase().includes(termino))) {
+                        
+                        htmlInt += `
+                            <div class="card" style="border-left-color: #8e8e93;">
+                                <div class="card-header">
+                                    <span>INT #${reg.id}</span>
+                                    <span>${reg.fecha}</span>
+                                </div>
+                                <div class="card-title">📞 Aviso: ${reg.motivo}</div>
+                                <div class="card-detail"><b>Lugar:</b> ${reg.lugar}</div>
+                                <div class="card-detail"><b>Notas:</b> ${reg.observaciones}</div>
+                            </div>`;
+                    }
+                }
             }
 
-            filtrados.reverse().forEach(r => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div style="font-size: 12px; color: #0a84ff; margin-bottom: 5px;">${r.fecha}</div>
-                    <div style="font-weight: bold; margin-bottom: 5px;">${r.datoClave || 'Sin ID'} - ${r.nombre || ''}</div>
-                    <div style="margin-bottom: 5px;"><strong>Motivo:</strong> ${r.motivo || 'N/A'}</div>
-                    <div style="font-size: 14px; color: #d1d1d6;">${r.notas}</div>
-                `;
-                divResultados.appendChild(card);
-            });
+            if(htmlVeh) divVeh.innerHTML = `<div class="section-title">🚗 VEHÍCULOS ENCONTRADOS</div>` + htmlVeh;
+            if(htmlPer) divPer.innerHTML = `<div class="section-title">👤 PERSONAS ENCONTRADAS</div>` + htmlPer;
+            if(htmlInt) divInt.innerHTML = `<div class="section-title">📞 AVISOS / MOTIVOS</div>` + htmlInt;
+            
+            if(!htmlVeh && !htmlPer && !htmlInt) {
+                divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No se han encontrado registros.</p>';
+            }
         }
     </script>
 </body>
