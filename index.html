@@ -9,7 +9,9 @@
     
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
-        h2 { margin-top: 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* CORRECCIÓN DE BUG IOS: Eliminado el text-transform y letter-spacing para evitar superposiciones en el PDF */
+        h2 { margin-top: 0; color: #fff; font-size: 18px; }
         
         input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
         input:focus, textarea:focus { outline: none; border-color: #d4a373; }
@@ -37,9 +39,10 @@
         .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
         .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
 
-        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; }
+        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; }
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
-        .detalle-label { color: #8e8e93; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        /* CORRECCIÓN BUG IOS: Eliminado text-transform de la etiqueta para evitar cruces de texto */
+        .detalle-label { color: #8e8e93; font-size: 12px; display: block; margin-bottom: 2px; font-weight: bold; }
 
         .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
         .pdf-header-left { display: flex; align-items: center; }
@@ -59,17 +62,21 @@
         .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; }
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
 
-        @media print {
-            body { background-color: #fff; color: #000; padding: 0; }
-            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
-            #details-screen { display: block !important; }
-            .detalle-bloque { background-color: #fff; border: 1px solid #ccc; color: #000; margin-bottom: 10px; }
-            .detalle-label { color: #555; }
-            * { color: #000 !important; }
-            .pdf-header { border-bottom: 2px solid #000; }
-            .pdf-header-right { color: #000; font-size: 18px; }
-            .actuantes-line { border-top: 1px solid #000; }
-        }
+        .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+        .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
+
+        /* MODO PDF DE ALTA COMPATIBILIDAD */
+        .pdf-mode { background-color: #fff !important; color: #000 !important; padding: 20px !important; }
+        .pdf-mode * { color: #000 !important; }
+        .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; }
+        .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; }
+        .pdf-mode .pdf-header-right { color: #000 !important; font-size: 18px !important; }
+        .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; }
+        .pdf-mode .no-print { display: none !important; }
+        .pdf-mode .detalle-label { color: #555 !important; }
+        .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; }
+        .pdf-mode .implicado-extras { color: #333 !important; }
+
     </style>
 </head>
 <body>
@@ -91,7 +98,7 @@
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- MÓDULO REGISTROS (Personas y Vehículos) -->
+    <!-- MÓDULO REGISTROS -->
     <div id="records-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="records-title" style="display: flex; align-items: center; gap: 8px;"><span>🗂️</span> <span id="records-header-text">PERSONAS</span></h2>
@@ -139,6 +146,7 @@
                 <img id="reg-per-foto-preview" class="photo-preview" src="" alt="Previsualización">
             </div>
         </div>
+
         <div id="form-fields-vehiculo" class="hidden">
             <div class="input-row">
                 <div class="form-group" style="flex: 1;"><label class="form-label">🔢 MATRÍCULA</label><input type="text" id="reg-veh-mat" placeholder="1234ABC" style="text-transform: uppercase;"></div>
@@ -244,8 +252,8 @@
 
     <div id="details-screen" class="hidden">
         <div id="details-action-bar" class="no-print" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;"></div>
-        <!-- Contenedor que será convertido a PDF -->
-        <div id="print-content" style="background-color: #fff; padding: 15px; border-radius: 8px; color: #000;"></div>
+        <!-- Ahora el contenedor no tiene fondos forzados en línea -->
+        <div id="print-content"></div>
     </div>
 
     <div id="tools-screen" class="hidden">
@@ -276,23 +284,23 @@
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
             
-            // Ocultamos temporalmente los botones de la app
+            // Entramos en modo PDF (aplica colores correctos en la captura)
             btnContainer.style.display = 'none';
+            elemento.classList.add('pdf-mode');
             
-            // Forzamos el texto negro y fondo blanco para la captura PDF
             const opt = {
-                margin:       10,
+                margin:       [10, 10, 10, 10],
                 filename:     nombreArchivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             try {
-                // Generamos el archivo PDF en memoria
+                // Generar Blob
                 const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
                 
-                // Si estamos en un dispositivo móvil con soporte de compartir (iPhone/Android)
+                // Opción compartir nativo iOS/Android
                 if (navigator.share && navigator.canShare) {
                     const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
                     if (navigator.canShare({ files: [archivo] })) {
@@ -301,18 +309,17 @@
                             title: opt.filename
                         });
                     } else {
-                        // Fallback móvil
                         html2pdf().set(opt).from(elemento).save();
                     }
                 } else {
-                    // En ordenador normal, descarga el PDF directamente
                     html2pdf().set(opt).from(elemento).save();
                 }
             } catch (error) {
-                console.error("Error al generar PDF:", error);
-                alert("Hubo un error al generar el documento PDF.");
+                console.error("Error PDF:", error);
+                alert("Hubo un error al generar el PDF.");
             } finally {
-                // Restauramos los botones
+                // Salimos de modo PDF y restauramos botones
+                elemento.classList.remove('pdf-mode');
                 btnContainer.style.display = 'flex';
             }
         }
@@ -415,7 +422,6 @@
             }
         }
 
-        // --- MÓDULO DE REGISTROS (Personas / Vehículos) ---
         function cambiarTabRegistros(tab) {
             tabRegistroActual = tab;
             document.getElementById('tab-personas').classList.remove('active');
@@ -496,10 +502,14 @@
                 if(!nombre && !dni) { alert("Introduce al menos un Nombre o DNI."); return; }
                 
                 const datos = {
-                    nombre: nombre, dni: dni, lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
-                    fechaNac: document.getElementById('reg-per-fecha-nac').value, tlf: document.getElementById('reg-per-tlf').value.trim(),
-                    padres: document.getElementById('reg-per-padres').value.trim(), domicilio: document.getElementById('reg-per-domicilio').value.trim(),
-                    vehDesc: document.getElementById('reg-per-veh-desc').value.trim(), vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
+                    nombre: nombre, dni: dni,
+                    lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
+                    fechaNac: document.getElementById('reg-per-fecha-nac').value,
+                    tlf: document.getElementById('reg-per-tlf').value.trim(),
+                    padres: document.getElementById('reg-per-padres').value.trim(),
+                    domicilio: document.getElementById('reg-per-domicilio').value.trim(),
+                    vehDesc: document.getElementById('reg-per-veh-desc').value.trim(),
+                    vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
                     foto: getBase64FromPreview('reg-per-foto-preview')
                 };
 
@@ -518,9 +528,12 @@
 
                 const datos = {
                     mat: mat, color: document.getElementById('reg-veh-color').value.trim(),
-                    marca: document.getElementById('reg-veh-marca').value.trim(), modelo: document.getElementById('reg-veh-modelo').value.trim(),
-                    vin: document.getElementById('reg-veh-vin').value.trim().toUpperCase(), titular: document.getElementById('reg-veh-titular').value.trim(),
-                    titularDni: document.getElementById('reg-veh-titular-dni').value.trim().toUpperCase(), obs: document.getElementById('reg-veh-obs').value.trim(),
+                    marca: document.getElementById('reg-veh-marca').value.trim(),
+                    modelo: document.getElementById('reg-veh-modelo').value.trim(),
+                    vin: document.getElementById('reg-veh-vin').value.trim().toUpperCase(),
+                    titular: document.getElementById('reg-veh-titular').value.trim(),
+                    titularDni: document.getElementById('reg-veh-titular-dni').value.trim().toUpperCase(),
+                    obs: document.getElementById('reg-veh-obs').value.trim(),
                     foto: getBase64FromPreview('reg-veh-foto-preview')
                 };
 
@@ -592,24 +605,24 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <h2>Ficha de Identificación Personal</h2>
+                            <h2>FICHA DE IDENTIFICACIÓN PERSONAL</h2>
                         </div>
                     </div>
                     ${per.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Nombre y Apellidos</span><b>${per.nombre || '-'}</b></div>
-                        <div class="detalle-item"><span class="detalle-label">Nº Documento</span>${per.dni || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">NOMBRE Y APELLIDOS</span><b>${per.nombre || '-'}</b></div>
+                        <div class="detalle-item"><span class="detalle-label">Nº DOCUMENTO</span>${per.dni || '-'}</div>
                     </div>
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Fecha y Lugar Nac.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
-                        <div class="detalle-item"><span class="detalle-label">Nombre de Padres</span>${per.padres || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">FECHA Y LUGAR NAC.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
+                        <div class="detalle-item"><span class="detalle-label">NOMBRE DE PADRES</span>${per.padres || '-'}</div>
                     </div>
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Teléfono</span>${per.tlf || '-'}</div>
-                        <div class="detalle-item"><span class="detalle-label">Domicilio</span>${per.domicilio || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">TELÉFONO</span>${per.tlf || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">DOMICILIO</span>${per.domicilio || '-'}</div>
                     </div>
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Vehículo Habitual</span>${per.vehDesc || '-'} | <b>Mat:</b> ${per.vehMat || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">VEHÍCULO HABITUAL</span>${per.vehDesc || '-'} | <b>MAT:</b> ${per.vehMat || '-'}</div>
                     </div>
                 `;
             } else {
@@ -627,21 +640,21 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <h2>Ficha de Vehículo</h2>
+                            <h2>FICHA DE VEHÍCULO</h2>
                         </div>
                     </div>
                     ${veh.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Matrícula</span><b>${veh.mat || '-'}</b></div>
-                        <div class="detalle-item"><span class="detalle-label">Marca y Modelo</span>${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || ''})</div>
-                        <div class="detalle-item"><span class="detalle-label">Bastidor (VIN)</span>${veh.vin || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">MATRÍCULA</span><b>${veh.mat || '-'}</b></div>
+                        <div class="detalle-item"><span class="detalle-label">MARCA Y MODELO</span>${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || ''})</div>
+                        <div class="detalle-item"><span class="detalle-label">BASTIDOR (VIN)</span>${veh.vin || '-'}</div>
                     </div>
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Titular / Conductor habitual</span>${veh.titular || '-'}</div>
-                        <div class="detalle-item"><span class="detalle-label">DNI Titular</span>${veh.titularDni || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">TITULAR / CONDUCTOR HABITUAL</span>${veh.titular || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">DNI TITULAR</span>${veh.titularDni || '-'}</div>
                     </div>
                     <div class="detalle-bloque">
-                        <div class="detalle-item"><span class="detalle-label">Anotaciones</span><div style="white-space:pre-wrap;">${veh.obs || '-'}</div></div>
+                        <div class="detalle-item"><span class="detalle-label">ANOTACIONES</span><div style="white-space:pre-wrap;">${veh.obs || '-'}</div></div>
                     </div>
                 `;
             }
@@ -740,7 +753,7 @@
             document.getElementById('details-action-bar').innerHTML = `
                 <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
                 <button class="secondary" onclick="editarNota(${nota.id}); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\\//g,'-')}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\//g,'-')}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
             `;
 
             document.getElementById('print-content').innerHTML = `
@@ -748,15 +761,17 @@
                     <div class="pdf-header-left">
                         <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
                         <div>
-                            <h2>Anotación</h2>
-                            <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Fecha: ${formateaFecha(nota.fechaISO)}</div>
+                            <h2>ANOTACIÓN</h2>
+                            <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">FECHA: ${formateaFecha(nota.fechaISO)}</div>
                         </div>
                     </div>
                 </div>
+                
                 <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
+                
                 ${nota.actuante ? `
                 <div class="actuantes-box">
-                    <div style="font-size: 12px; color: #8e8e93; text-transform: uppercase; margin-bottom: 5px;">Agente Actuante</div>
+                    <div style="font-size: 12px; color: #8e8e93; font-weight: bold; margin-bottom: 5px;">AGENTE ACTUANTE</div>
                     <div class="actuantes-line">${nota.actuante}</div>
                 </div>` : ''}
             `;
@@ -830,15 +845,14 @@
             div.innerHTML = '';
             implicadosTemporales.forEach((imp, index) => {
                 const icono = imp.tipo === 'persona' ? '👤' : '🚗';
-                const color = imp.tipo === 'persona' ? '#30d158' : '#5e5ce6';
                 let extras = '';
                 if(imp.tipo === 'persona') {
                     if(imp.fnac) extras += ` F.Nac: ${formateaFechaCorta(imp.fnac)}`;
                     if(imp.tlf) extras += ` | Tlf: ${imp.tlf}`;
                     if(imp.dom) extras += ` | Dom: ${imp.dom}`;
                 }
-                div.innerHTML += `<div style="background: #2c2c2e; border-left: 3px solid ${color}; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
-                    <div>${icono} <b>${imp.dato}</b> - ${imp.nota} <br><span style="color:#8e8e93; font-size:11px;">${extras}</span></div>
+                div.innerHTML += `<div class="implicado-box" style="display: flex; justify-content: space-between;">
+                    <div>${icono} <b>${imp.dato}</b> - ${imp.nota} <br><span class="implicado-extras" style="font-size:11px;">${extras}</span></div>
                     <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center; cursor:pointer;" onclick="borrarImplicado(${index})">X</span>
                 </div>`;
             });
@@ -978,14 +992,14 @@
                     const icono = imp.tipo === 'persona' ? '👤' : '🚗';
                     let detallesExtra = '';
                     if (imp.tipo === 'persona') {
-                        if(imp.fnac) detallesExtra += `<div><b>F. Nacimiento:</b> ${formateaFechaCorta(imp.fnac)}</div>`;
-                        if(imp.tlf) detallesExtra += `<div><b>Teléfono:</b> ${imp.tlf}</div>`;
-                        if(imp.dom) detallesExtra += `<div><b>Domicilio:</b> ${imp.dom}</div>`;
+                        if(imp.fnac) detallesExtra += `<div><b>F. NACIMIENTO:</b> ${formateaFechaCorta(imp.fnac)}</div>`;
+                        if(imp.tlf) detallesExtra += `<div><b>TELÉFONO:</b> ${imp.tlf}</div>`;
+                        if(imp.dom) detallesExtra += `<div><b>DOMICILIO:</b> ${imp.dom}</div>`;
                     }
                     htmlImplicados += `
-                        <div class="detalle-item" style="background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                        <div class="implicado-box">
                             <div style="font-size: 16px;">${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
-                            <div style="color:#d1d1d6; font-size:14px; margin-top: 5px;">${detallesExtra}</div>
+                            <div class="implicado-extras">${detallesExtra}</div>
                         </div>`;
                 });
             } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
@@ -999,35 +1013,33 @@
                             <div class="no-print" style="font-size: 12px; color: #8e8e93; margin-top: 4px;">Ref. Interna App: #${reg.id}</div>
                         </div>
                     </div>
-                    <div class="pdf-header-right">
-                        INT-
-                    </div>
+                    <div class="pdf-header-right">INT-</div>
                 </div>
                 
                 <div class="detalle-bloque">
-                    <div class="detalle-item"><span class="detalle-label">Fecha y Hora</span>${formateaFecha(reg.fechaISO)}</div>
+                    <div class="detalle-item"><span class="detalle-label">FECHA Y HORA</span>${formateaFecha(reg.fechaISO)}</div>
                     <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
-                    <div class="detalle-item"><span class="detalle-label">Motivo</span><b>${reg.motivo}</b></div>
+                    <div class="detalle-item"><span class="detalle-label">MOTIVO</span><b>${reg.motivo}</b></div>
                     <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
-                    <div class="detalle-item"><span class="detalle-label">Lugar de los hechos</span>${reg.lugar || 'No consta'}</div>
+                    <div class="detalle-item"><span class="detalle-label">LUGAR DE LOS HECHOS</span>${reg.lugar || 'No consta'}</div>
                 </div>
                 <div class="detalle-bloque">
-                    <div class="detalle-item"><span class="detalle-label">Datos del Requirente</span></div>
+                    <div class="detalle-item"><span class="detalle-label">DATOS DEL REQUIRENTE</span></div>
                     <div class="detalle-item"><b>Tlf:</b> ${reg.telefono || 'No consta'}</div>
                     <div class="detalle-item"><b>Nombre:</b> ${reg.comunicante || 'No consta'}</div>
                 </div>
                 <div class="detalle-bloque">
-                    <span class="detalle-label" style="margin-bottom: 8px;">Implicados / Identificados</span>
+                    <span class="detalle-label" style="margin-bottom: 8px;">IMPLICADOS / IDENTIFICADOS</span>
                     ${htmlImplicados}
                 </div>
                 <div class="detalle-bloque">
-                    <span class="detalle-label">Observaciones y Desarrollo</span>
+                    <span class="detalle-label">OBSERVACIONES Y DESARROLLO</span>
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
                     ${reg.fotoObservaciones ? `<div style="margin-top:15px; text-align:center;"><img src="${reg.fotoObservaciones}" style="max-height:300px; max-width:100%; border-radius:8px;"></div>` : ''}
                 </div>
                 
                 <div class="actuantes-box">
-                    <div style="font-size: 12px; color: #8e8e93; text-transform: uppercase; margin-bottom: 5px;">Agentes Actuantes</div>
+                    <div class="detalle-label">AGENTES ACTUANTES</div>
                     <div class="actuantes-line">${reg.actuantes || 'No consta'}</div>
                 </div>
             `;
