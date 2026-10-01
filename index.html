@@ -38,6 +38,11 @@
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
         .detalle-label { color: #8e8e93; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
+        /* Estilos de cabecera aplicados a pantalla y PDF para controlar el tamaño de la imagen */
+        .pdf-header { display: flex; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
+        .pdf-header img { width: 65px; height: auto; margin-right: 15px; }
+        .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
+
         @media print {
             body { background-color: #fff; color: #000; padding: 0; }
             .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen { display: none !important; }
@@ -45,10 +50,8 @@
             .detalle-bloque { background-color: #fff; border: 1px solid #ccc; color: #000; margin-bottom: 10px; }
             .detalle-label { color: #555; }
             * { color: #000 !important; }
-            /* Ajustes para que el encabezado con escudo se vea bien en papel */
-            .pdf-header { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-            .pdf-header img { width: 70px; height: auto; margin-right: 15px; }
-            .pdf-header h2 { border: none; margin: 0; padding: 0; }
+            /* Ajuste específico de la línea para el papel */
+            .pdf-header { border-bottom: 2px solid #000; }
         }
     </style>
 </head>
@@ -154,7 +157,6 @@
     </div>
 
     <script>
-        // Nueva versión v3 para resetear el contador a 1
         let db = JSON.parse(localStorage.getItem('db_policial_v3')) || [];
         let dbNotas = JSON.parse(localStorage.getItem('db_notas_v1')) || [];
         let implicadosTemporales = [];
@@ -313,7 +315,6 @@
             const motivo = document.getElementById('motivo').value.trim();
             if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
             
-            // GENERADOR DE ID CORRELATIVO EMPEZANDO POR 1
             let nuevoID = 1;
             if (db.length > 0) {
                 nuevoID = Math.max(...db.map(r => r.id)) + 1;
@@ -432,13 +433,12 @@
                 });
             } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
 
-            // MODIFICACIÓN: Cabecera con imagen del escudo preparada para impresión
             const htmlDetalle = `
                 <div class="pdf-header">
                     <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
                     <div>
                         <h2>Diligencia de Intervención</h2>
-                        <div style="font-size: 14px; color: #8e8e93;">Nº Registro: #${reg.id}</div>
+                        <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Nº Registro: #${reg.id}</div>
                     </div>
                 </div>
                 
