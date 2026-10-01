@@ -38,20 +38,34 @@
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
         .detalle-label { color: #8e8e93; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
-        /* Estilos de cabecera aplicados a pantalla y PDF para controlar el tamaño de la imagen */
         .pdf-header { display: flex; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
         .pdf-header img { width: 65px; height: auto; margin-right: 15px; }
         .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
 
+        /* Estilos para input de foto */
+        .photo-input-container { border: 1px dashed #d4a373; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; background-color: #151518;}
+        .photo-input-container input[type="file"] { display: none; }
+        .photo-preview { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px; display: none; }
+        .photo-label { color: #d4a373; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        /* Estilos Tabs Registros */
+        .tabs { display: flex; margin-bottom: 15px; background-color: #1c1c1e; border-radius: 8px; padding: 4px; border: 1px solid #2c2c2e; }
+        .tab-btn { flex: 1; margin: 0; background-color: transparent; color: #8e8e93; padding: 10px; border-radius: 6px; font-size: 14px; }
+        .tab-btn.active { background-color: #d4a373; color: #000; }
+
+        /* Estilos Bloque Actuantes (Firma) */
+        .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; }
+        .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
+
         @media print {
             body { background-color: #fff; color: #000; padding: 0; }
-            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen { display: none !important; }
+            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
             #details-screen { display: block !important; }
             .detalle-bloque { background-color: #fff; border: 1px solid #ccc; color: #000; margin-bottom: 10px; }
             .detalle-label { color: #555; }
             * { color: #000 !important; }
-            /* Ajuste específico de la línea para el papel */
             .pdf-header { border-bottom: 2px solid #000; }
+            .actuantes-line { border-top: 1px solid #000; }
         }
     </style>
 </head>
@@ -66,13 +80,147 @@
 
     <div id="main-screen" class="hidden">
         <h2>Gestión Operativa</h2>
-        <button onclick="mostrar('form-screen')">📞 Registrar Llamada / Aviso</button>
+        <button onclick="prepararNuevoAviso()">📞 Registrar Llamada / Aviso</button>
+        <button onclick="mostrar('records-screen')" style="background-color: #5e5ce6; color: #fff;">🗂️ Registro de Identificaciones</button>
         <button onclick="mostrar('notes-screen')" style="background-color: #30d158; color: #000;">📝 Bloc de Notas</button>
         <button onclick="mostrar('search-screen')">🔍 Buscador e Historial</button>
         <button onclick="mostrar('tools-screen')" class="secondary">🛠 Normativa y Enlaces</button>
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
+    <!-- MÓDULO REGISTROS (Personas y Vehículos) -->
+    <div id="records-screen" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 id="records-title" style="display: flex; align-items: center; gap: 8px;"><span>🗂️</span> <span id="records-header-text">PERSONAS</span></h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="secondary" onclick="mostrarFormularioRegistro()" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; font-size: 12px;">+ Añadir</button>
+                <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button id="tab-personas" class="tab-btn active" onclick="cambiarTabRegistros('personas')">👥 Personas</button>
+            <button id="tab-vehiculos" class="tab-btn" onclick="cambiarTabRegistros('vehiculos')">🚗 Vehículos</button>
+        </div>
+
+        <input type="text" id="busqueda-registros" placeholder="Buscar nombre, DNI, matrícula..." onkeyup="ejecutarBusquedaRegistros()">
+        
+        <div id="lista-registros" style="margin-top: 20px;">
+            <!-- Contenido dinámico -->
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE REGISTRO (Personas o Vehículos) -->
+    <div id="record-form-screen" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 id="record-form-title">NUEVO REGISTRO</h2>
+            <button class="secondary" onclick="mostrar('records-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">&larr; Volver</button>
+        </div>
+
+        <div id="form-fields-persona" class="hidden">
+            <div class="form-group">
+                <label class="form-label">👤 NOMBRE Y APELLIDOS</label>
+                <input type="text" id="reg-per-nombre" placeholder="Nombre completo">
+            </div>
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🪪 Nº DOCUMENTO</label>
+                    <input type="text" id="reg-per-dni" placeholder="DNI / NIE / Pasaporte" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🌍 NACIMIENTO</label>
+                    <input type="text" id="reg-per-lugar-nac" placeholder="Lugar">
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">📅 FECHA NAC.</label>
+                    <input type="date" id="reg-per-fecha-nac">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">📞 TELÉFONO</label>
+                    <input type="tel" id="reg-per-tlf" placeholder="Número">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label>
+                <input type="text" id="reg-per-padres" placeholder="Padre y Madre">
+            </div>
+            <div class="form-group">
+                <label class="form-label">🏠 DOMICILIO</label>
+                <input type="text" id="reg-per-domicilio" placeholder="Dirección completa">
+            </div>
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🚗 VEHÍCULO HABITUAL</label>
+                    <input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🔢 MATRÍCULA</label>
+                    <input type="text" id="reg-per-veh-mat" placeholder="Matrícula" style="text-transform: uppercase;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">📷 FOTOGRAFÍAS (ESCANEO OCR)</label>
+                <label class="photo-input-container">
+                    <span class="photo-label">📷 Tomar Foto / Galería</span>
+                    <input type="file" id="reg-per-foto-input" accept="image/*" onchange="previsualizarFoto(event, 'reg-per-foto-preview')">
+                </label>
+                <img id="reg-per-foto-preview" class="photo-preview" src="" alt="Previsualización">
+            </div>
+        </div>
+
+        <div id="form-fields-vehiculo" class="hidden">
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🔢 MATRÍCULA</label>
+                    <input type="text" id="reg-veh-mat" placeholder="1234ABC" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🎨 COLOR</label>
+                    <input type="text" id="reg-veh-color" placeholder="Ej: Blanco">
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🏷️ MARCA</label>
+                    <input type="text" id="reg-veh-marca" placeholder="Ej: Seat">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">🚘 MODELO</label>
+                    <input type="text" id="reg-veh-modelo" placeholder="Ej: León">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">🔧 NÚMERO DE BASTIDOR (VIN)</label>
+                <input type="text" id="reg-veh-vin" placeholder="17 CARACTERES DEL BASTIDOR" style="text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">👤 TITULAR / CONDUCTOR</label>
+                <input type="text" id="reg-veh-titular" placeholder="Nombre completo del Titular o Conductor">
+            </div>
+            <div class="form-group">
+                <label class="form-label">🪪 DOCUMENTO (DNI/NIE)</label>
+                <input type="text" id="reg-veh-titular-dni" placeholder="DNI/NIE del Titular/Conductor" style="text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">📷 FOTOGRAFÍAS DEL VEHÍCULO</label>
+                <label class="photo-input-container">
+                    <span class="photo-label">📷 Tomar Foto / Galería</span>
+                    <input type="file" id="reg-veh-foto-input" accept="image/*" onchange="previsualizarFoto(event, 'reg-veh-foto-preview')">
+                </label>
+                <img id="reg-veh-foto-preview" class="photo-preview" src="" alt="Previsualización">
+            </div>
+            <div class="form-group">
+                <label class="form-label">📝 ANOTACIONES / OBSERVACIONES</label>
+                <textarea id="reg-veh-obs" rows="3" placeholder="Anotaciones sobre el estado del vehículo..."></textarea>
+            </div>
+        </div>
+
+        <button id="btn-guardar-registro" onclick="guardarRegistro()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Registro</button>
+    </div>
+
+    <!-- MÓDULO BLOC DE NOTAS -->
     <div id="notes-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2>📝 Bloc de Notas</h2>
@@ -80,14 +228,16 @@
         </div>
         <div class="form-group">
             <textarea id="nuevaNota" rows="5" placeholder="Escribe aquí tu anotación libre (matrículas sueltas, recordatorios...)"></textarea>
-            <button onclick="guardarNota()">Guardar Nota</button>
+            <button id="btn-guardar-nota" onclick="guardarNota()">Guardar Nota</button>
+            <button id="btn-cancelar-nota" class="secondary hidden" onclick="cancelarEdicionNota()">Cancelar Edición</button>
         </div>
         <div id="lista-notas" style="margin-top: 25px;"></div>
     </div>
 
+    <!-- PANTALLA REGISTRO AVISOS -->
     <div id="form-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2>📞 Registrar Aviso</h2>
+            <h2 id="titulo-form">📞 Registrar Aviso</h2>
             <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
         </div>
         <div class="form-group"><label class="form-label">🕒 Fecha y Hora</label><input type="datetime-local" id="fechaHora"></div>
@@ -101,7 +251,21 @@
                 <button class="btn-gps" onclick="obtenerGPS()">📍 GPS</button>
             </div>
         </div>
-        <div class="form-group"><label class="form-label">📝 Observaciones</label><textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea></div>
+        
+        <div class="form-group">
+            <label class="form-label">👮 AGENTES ACTUANTES</label>
+            <input type="text" id="actuantes" placeholder="Ej: Agentes 1234 y 5678...">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">📝 Observaciones</label>
+            <textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea>
+            <label class="photo-input-container" style="margin-top: 10px; margin-bottom: 0;">
+                <span class="photo-label">📷 Añadir Foto a Observaciones</span>
+                <input type="file" id="aviso-foto-input" accept="image/*" onchange="previsualizarFoto(event, 'aviso-foto-preview')">
+            </label>
+            <img id="aviso-foto-preview" class="photo-preview" src="" alt="Previsualización">
+        </div>
 
         <div class="form-group" style="background-color: #151518; padding: 15px; border-radius: 8px; border: 1px solid #2c2c2e;">
             <label class="form-label" style="color: #fff; margin-bottom: 10px;">🔗 Implicados en la intervención</label>
@@ -123,7 +287,7 @@
             </div>
             <div id="lista-implicados-temp" style="margin-top: 15px;"></div>
         </div>
-        <button onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
+        <button id="btn-guardar-aviso" onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
     <div id="search-screen" class="hidden">
@@ -138,10 +302,7 @@
     </div>
 
     <div id="details-screen" class="hidden">
-        <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <button class="secondary" onclick="mostrar('search-screen')" style="width: auto; padding: 8px 15px; margin: 0; border-radius: 8px;">&larr; Volver</button>
-            <button onclick="window.print()" style="width: auto; padding: 8px 15px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ Crear PDF</button>
-        </div>
+        <div id="details-action-bar" class="no-print" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;"></div>
         <div id="print-content"></div>
     </div>
 
@@ -159,7 +320,14 @@
     <script>
         let db = JSON.parse(localStorage.getItem('db_policial_v3')) || [];
         let dbNotas = JSON.parse(localStorage.getItem('db_notas_v1')) || [];
+        let dbPersonas = JSON.parse(localStorage.getItem('db_personas_v1')) || [];
+        let dbVehiculos = JSON.parse(localStorage.getItem('db_vehiculos_v1')) || [];
+        
         let implicadosTemporales = [];
+        let editandoIntervencionId = null;
+        let editandoNotaId = null;
+        let editandoRegistroId = null;
+        let tabRegistroActual = 'personas';
 
         function acceder() {
             const pin = document.getElementById('pinInput').value;
@@ -186,13 +354,14 @@
             });
             document.getElementById(pantalla).classList.remove('hidden');
             
-            if(pantalla === 'form-screen') {
-                configurarFechaActual();
-                implicadosTemporales = [];
-                actualizarListaImplicados();
-            }
             if(pantalla === 'search-screen') ejecutarBusqueda(); 
-            if(pantalla === 'notes-screen') cargarNotas();
+            if(pantalla === 'notes-screen') {
+                cancelarEdicionNota();
+                cargarNotas();
+            }
+            if(pantalla === 'records-screen') {
+                ejecutarBusquedaRegistros();
+            }
         }
 
         function configurarFechaActual() {
@@ -227,14 +396,344 @@
             }
         }
 
+        function previsualizarFoto(event, previewId) {
+            const file = event.target.files[0];
+            const preview = document.getElementById(previewId);
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    preview.setAttribute('data-base64', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                preview.removeAttribute('data-base64');
+            }
+        }
+
+        function getBase64FromPreview(previewId) {
+            const preview = document.getElementById(previewId);
+            return preview.getAttribute('data-base64') || null;
+        }
+
+        function setBase64ToPreview(previewId, base64String) {
+            const preview = document.getElementById(previewId);
+            if(base64String) {
+                preview.src = base64String;
+                preview.style.display = 'block';
+                preview.setAttribute('data-base64', base64String);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                preview.removeAttribute('data-base64');
+            }
+        }
+
+
+        // --- MÓDULO DE REGISTROS (Personas / Vehículos) ---
+        
+        function cambiarTabRegistros(tab) {
+            tabRegistroActual = tab;
+            document.getElementById('tab-personas').classList.remove('active');
+            document.getElementById('tab-vehiculos').classList.remove('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            const titulo = tab === 'personas' ? 'PERSONAS' : 'VEHÍCULOS';
+            document.getElementById('records-header-text').innerText = titulo;
+            
+            ejecutarBusquedaRegistros();
+        }
+
+        function mostrarFormularioRegistro(idEditar = null) {
+            editandoRegistroId = idEditar;
+            document.getElementById('form-fields-persona').classList.add('hidden');
+            document.getElementById('form-fields-vehiculo').classList.add('hidden');
+            
+            if(tabRegistroActual === 'personas') {
+                document.getElementById('record-form-title').innerText = idEditar ? "✏️ EDITAR PERSONA" : "NUEVA PERSONA";
+                document.getElementById('form-fields-persona').classList.remove('hidden');
+                limpiarFormularioPersona();
+                if(idEditar) cargarDatosPersonaForm(idEditar);
+            } else {
+                document.getElementById('record-form-title').innerText = idEditar ? "✏️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
+                document.getElementById('form-fields-vehiculo').classList.remove('hidden');
+                limpiarFormularioVehiculo();
+                if(idEditar) cargarDatosVehiculoForm(idEditar);
+            }
+            
+            document.getElementById('btn-guardar-registro').innerText = idEditar ? "Actualizar Registro" : "Guardar Registro";
+            document.getElementById('btn-guardar-registro').style.backgroundColor = idEditar ? "#ffcc00" : "#d4a373";
+            
+            mostrar('record-form-screen');
+        }
+
+        function limpiarFormularioPersona() {
+            const campos = ['reg-per-nombre', 'reg-per-dni', 'reg-per-lugar-nac', 'reg-per-fecha-nac', 'reg-per-tlf', 'reg-per-padres', 'reg-per-domicilio', 'reg-per-veh-desc', 'reg-per-veh-mat', 'reg-per-foto-input'];
+            campos.forEach(id => document.getElementById(id).value = '');
+            setBase64ToPreview('reg-per-foto-preview', null);
+        }
+
+        function limpiarFormularioVehiculo() {
+            const campos = ['reg-veh-mat', 'reg-veh-color', 'reg-veh-marca', 'reg-veh-modelo', 'reg-veh-vin', 'reg-veh-titular', 'reg-veh-titular-dni', 'reg-veh-obs', 'reg-veh-foto-input'];
+            campos.forEach(id => document.getElementById(id).value = '');
+            setBase64ToPreview('reg-veh-foto-preview', null);
+        }
+
+        function cargarDatosPersonaForm(id) {
+            const per = dbPersonas.find(p => p.id === id);
+            if(!per) return;
+            document.getElementById('reg-per-nombre').value = per.nombre || '';
+            document.getElementById('reg-per-dni').value = per.dni || '';
+            document.getElementById('reg-per-lugar-nac').value = per.lugarNac || '';
+            document.getElementById('reg-per-fecha-nac').value = per.fechaNac || '';
+            document.getElementById('reg-per-tlf').value = per.tlf || '';
+            document.getElementById('reg-per-padres').value = per.padres || '';
+            document.getElementById('reg-per-domicilio').value = per.domicilio || '';
+            document.getElementById('reg-per-veh-desc').value = per.vehDesc || '';
+            document.getElementById('reg-per-veh-mat').value = per.vehMat || '';
+            if(per.foto) setBase64ToPreview('reg-per-foto-preview', per.foto);
+        }
+
+        function cargarDatosVehiculoForm(id) {
+            const veh = dbVehiculos.find(v => v.id === id);
+            if(!veh) return;
+            document.getElementById('reg-veh-mat').value = veh.mat || '';
+            document.getElementById('reg-veh-color').value = veh.color || '';
+            document.getElementById('reg-veh-marca').value = veh.marca || '';
+            document.getElementById('reg-veh-modelo').value = veh.modelo || '';
+            document.getElementById('reg-veh-vin').value = veh.vin || '';
+            document.getElementById('reg-veh-titular').value = veh.titular || '';
+            document.getElementById('reg-veh-titular-dni').value = veh.titularDni || '';
+            document.getElementById('reg-veh-obs').value = veh.obs || '';
+            if(veh.foto) setBase64ToPreview('reg-veh-foto-preview', veh.foto);
+        }
+
+        function guardarRegistro() {
+            if(tabRegistroActual === 'personas') {
+                const nombre = document.getElementById('reg-per-nombre').value.trim();
+                const dni = document.getElementById('reg-per-dni').value.trim().toUpperCase();
+                if(!nombre && !dni) { alert("Introduce al menos un Nombre o DNI."); return; }
+                
+                const datos = {
+                    nombre: nombre, dni: dni,
+                    lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
+                    fechaNac: document.getElementById('reg-per-fecha-nac').value,
+                    tlf: document.getElementById('reg-per-tlf').value.trim(),
+                    padres: document.getElementById('reg-per-padres').value.trim(),
+                    domicilio: document.getElementById('reg-per-domicilio').value.trim(),
+                    vehDesc: document.getElementById('reg-per-veh-desc').value.trim(),
+                    vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
+                    foto: getBase64FromPreview('reg-per-foto-preview')
+                };
+
+                if(editandoRegistroId) {
+                    const idx = dbPersonas.findIndex(p => p.id === editandoRegistroId);
+                    if(idx !== -1) dbPersonas[idx] = { ...dbPersonas[idx], ...datos };
+                } else {
+                    datos.id = Date.now();
+                    dbPersonas.push(datos);
+                }
+                localStorage.setItem('db_personas_v1', JSON.stringify(dbPersonas));
+
+            } else {
+                const mat = document.getElementById('reg-veh-mat').value.trim().toUpperCase();
+                if(!mat) { alert("La matrícula es obligatoria."); return; }
+
+                const datos = {
+                    mat: mat, color: document.getElementById('reg-veh-color').value.trim(),
+                    marca: document.getElementById('reg-veh-marca').value.trim(),
+                    modelo: document.getElementById('reg-veh-modelo').value.trim(),
+                    vin: document.getElementById('reg-veh-vin').value.trim().toUpperCase(),
+                    titular: document.getElementById('reg-veh-titular').value.trim(),
+                    titularDni: document.getElementById('reg-veh-titular-dni').value.trim().toUpperCase(),
+                    obs: document.getElementById('reg-veh-obs').value.trim(),
+                    foto: getBase64FromPreview('reg-veh-foto-preview')
+                };
+
+                if(editandoRegistroId) {
+                    const idx = dbVehiculos.findIndex(v => v.id === editandoRegistroId);
+                    if(idx !== -1) dbVehiculos[idx] = { ...dbVehiculos[idx], ...datos };
+                } else {
+                    datos.id = Date.now();
+                    dbVehiculos.push(datos);
+                }
+                localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
+            }
+            alert("Registro guardado.");
+            mostrar('records-screen');
+        }
+
+        function ejecutarBusquedaRegistros() {
+            const termino = document.getElementById('busqueda-registros').value.toUpperCase();
+            const divLista = document.getElementById('lista-registros');
+            divLista.innerHTML = '';
+            let hayResultados = false;
+
+            if(tabRegistroActual === 'personas') {
+                const filtrados = dbPersonas.filter(p => 
+                    !termino || (p.nombre && p.nombre.toUpperCase().includes(termino)) || 
+                    (p.dni && p.dni.includes(termino)) || (p.vehMat && p.vehMat.includes(termino))
+                );
+                filtrados.reverse().forEach(p => {
+                    hayResultados = true;
+                    divLista.innerHTML += `
+                        <div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto(${p.id}, 'personas')">
+                            <div class="card-title">👤 ${p.nombre || 'Sin nombre'}</div>
+                            <div class="card-detail"><b>DNI:</b> ${p.dni || '-'}</div>
+                            ${p.vehMat ? `<div class="card-detail"><b>Vehículo:</b> ${p.vehMat}</div>` : ''}
+                        </div>`;
+                });
+                if(!hayResultados) divLista.innerHTML = `<p style="color:#8e8e93; text-align:center;">No hay personas registradas.</p>`;
+
+            } else {
+                const filtrados = dbVehiculos.filter(v => 
+                    !termino || (v.mat && v.mat.includes(termino)) || 
+                    (v.marca && v.marca.toUpperCase().includes(termino)) || (v.titularDni && v.titularDni.includes(termino))
+                );
+                filtrados.reverse().forEach(v => {
+                    hayResultados = true;
+                    divLista.innerHTML += `
+                        <div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto(${v.id}, 'vehiculos')">
+                            <div class="card-title">🚗 ${v.mat || 'Sin matrícula'}</div>
+                            <div class="card-detail"><b>Vehículo:</b> ${v.marca} ${v.modelo}</div>
+                            ${v.titular ? `<div class="card-detail"><b>Titular:</b> ${v.titular}</div>` : ''}
+                        </div>`;
+                });
+                if(!hayResultados) divLista.innerHTML = `<p style="color:#8e8e93; text-align:center;">No hay vehículos registrados.</p>`;
+            }
+        }
+
+        function verRegistroCompleto(id, tipo) {
+            let titulo = "", htmlDetalle = "";
+
+            if (tipo === 'personas') {
+                const per = dbPersonas.find(p => p.id === id);
+                if(!per) return;
+                
+                document.getElementById('details-action-bar').innerHTML = `
+                    <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
+                    <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button onclick="borrarRegistroBase(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
+                `;
+
+                htmlDetalle = `
+                    <div class="pdf-header">
+                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                        <h2>Ficha de Identificación Personal</h2>
+                    </div>
+                    ${per.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Nombre y Apellidos</span><b>${per.nombre || '-'}</b></div>
+                        <div class="detalle-item"><span class="detalle-label">Nº Documento</span>${per.dni || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Fecha y Lugar Nac.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
+                        <div class="detalle-item"><span class="detalle-label">Nombre de Padres</span>${per.padres || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Teléfono</span>${per.tlf || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">Domicilio</span>${per.domicilio || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Vehículo Habitual</span>${per.vehDesc || '-'} | <b>Mat:</b> ${per.vehMat || '-'}</div>
+                    </div>
+                `;
+            } else {
+                const veh = dbVehiculos.find(v => v.id === id);
+                if(!veh) return;
+
+                document.getElementById('details-action-bar').innerHTML = `
+                    <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
+                    <button class="secondary" onclick="mostrarFormularioRegistro(${veh.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button onclick="borrarRegistroBase(${veh.id}, 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
+                `;
+
+                htmlDetalle = `
+                    <div class="pdf-header">
+                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                        <h2>Ficha de Vehículo</h2>
+                    </div>
+                    ${veh.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Matrícula</span><b>${veh.mat || '-'}</b></div>
+                        <div class="detalle-item"><span class="detalle-label">Marca y Modelo</span>${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || ''})</div>
+                        <div class="detalle-item"><span class="detalle-label">Bastidor (VIN)</span>${veh.vin || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Titular / Conductor habitual</span>${veh.titular || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">DNI Titular</span>${veh.titularDni || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque">
+                        <div class="detalle-item"><span class="detalle-label">Anotaciones</span><div style="white-space:pre-wrap;">${veh.obs || '-'}</div></div>
+                    </div>
+                `;
+            }
+            document.getElementById('print-content').innerHTML = htmlDetalle;
+            mostrar('details-screen');
+        }
+
+        function borrarRegistroBase(id, tipo) {
+            if(confirm("¿Seguro que quieres borrar este registro?")) {
+                if(tipo === 'personas') {
+                    dbPersonas = dbPersonas.filter(p => p.id !== id);
+                    localStorage.setItem('db_personas_v1', JSON.stringify(dbPersonas));
+                } else {
+                    dbVehiculos = dbVehiculos.filter(v => v.id !== id);
+                    localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
+                }
+                mostrar('records-screen');
+            }
+        }
+
+        // --- SISTEMA DE NOTAS Y AVISOS ---
+
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
             if(!texto) return;
-            const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto };
-            dbNotas.push(nuevaNota);
+
+            if (editandoNotaId) {
+                const index = dbNotas.findIndex(n => n.id === editandoNotaId);
+                if (index !== -1) dbNotas[index].texto = texto;
+                alert("Nota actualizada.");
+            } else {
+                const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto };
+                dbNotas.push(nuevaNota);
+            }
+            
             localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
-            document.getElementById('nuevaNota').value = '';
+            cancelarEdicionNota();
             cargarNotas();
+        }
+
+        function editarNota(id) {
+            const nota = dbNotas.find(n => n.id === id);
+            if(!nota) return;
+            editandoNotaId = id;
+            document.getElementById('nuevaNota').value = nota.texto;
+            document.getElementById('btn-guardar-nota').innerText = "Actualizar Nota";
+            document.getElementById('btn-guardar-nota').style.backgroundColor = "#ffcc00"; 
+            document.getElementById('btn-cancelar-nota').classList.remove('hidden');
+            window.scrollTo(0, 0); 
+        }
+
+        function cancelarEdicionNota() {
+            editandoNotaId = null;
+            document.getElementById('nuevaNota').value = '';
+            document.getElementById('btn-guardar-nota').innerText = "Guardar Nota";
+            document.getElementById('btn-guardar-nota').style.backgroundColor = "#d4a373";
+            document.getElementById('btn-cancelar-nota').classList.add('hidden');
+        }
+
+        function borrarNota(id) {
+            if(confirm("¿Borrar esta nota permanentemente?")) {
+                dbNotas = dbNotas.filter(n => n.id !== id);
+                localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
+                cargarNotas();
+            }
         }
 
         function cargarNotas() {
@@ -244,26 +743,89 @@
                 div.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No hay notas guardadas.</p>';
                 return;
             }
-            [...dbNotas].reverse().forEach((n, indexInvertido) => {
-                const indiceReal = dbNotas.length - 1 - indexInvertido;
-                const fechaF = formateaFecha(n.fechaISO);
+            [...dbNotas].reverse().forEach(nota => {
+                const fechaF = formateaFecha(nota.fechaISO);
                 div.innerHTML += `
                     <div class="card" style="border-left-color: #30d158;">
                         <div class="card-header">
                             <span>🕒 ${fechaF}</span>
-                            <span style="color: #ff453a; font-weight: bold; font-size: 16px; cursor: pointer; padding: 0 5px;" onclick="borrarNota(${indiceReal})">X</span>
+                            <div style="font-size: 16px;">
+                                <span style="cursor: pointer; padding: 0 8px;" onclick="imprimirNota(${nota.id})" title="Imprimir PDF">🖨️</span>
+                                <span style="cursor: pointer; padding: 0 8px;" onclick="editarNota(${nota.id})" title="Editar">✏️</span>
+                                <span style="color: #ff453a; font-weight: bold; cursor: pointer; padding: 0 8px;" onclick="borrarNota(${nota.id})" title="Borrar">X</span>
+                            </div>
                         </div>
-                        <div style="white-space: pre-wrap; font-size: 15px; color: #fff;">${n.texto}</div>
+                        <div style="white-space: pre-wrap; font-size: 15px; color: #fff;">${nota.texto}</div>
                     </div>`;
             });
         }
 
-        function borrarNota(indiceReal) {
-            if(confirm("¿Estás seguro de que quieres borrar esta nota?")) {
-                dbNotas.splice(indiceReal, 1);
-                localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
-                cargarNotas();
+        function imprimirNota(id) {
+            const nota = dbNotas.find(n => n.id === id);
+            if(!nota) return;
+
+            document.getElementById('details-action-bar').innerHTML = `
+                <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
+                <button class="secondary" onclick="editarNota(${nota.id}); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                <button onclick="window.print()" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+            `;
+
+            const htmlDetalle = `
+                <div class="pdf-header">
+                    <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                    <div>
+                        <h2>Anotación Operativa</h2>
+                        <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Fecha: ${formateaFecha(nota.fechaISO)}</div>
+                    </div>
+                </div>
+                <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
+            `;
+            document.getElementById('print-content').innerHTML = htmlDetalle;
+            mostrar('details-screen');
+        }
+
+        function prepararNuevoAviso() {
+            editandoIntervencionId = null;
+            document.getElementById('titulo-form').innerText = "📞 Registrar Aviso";
+            document.getElementById('btn-guardar-aviso').innerText = "Guardar Aviso";
+            document.getElementById('btn-guardar-aviso').style.backgroundColor = "#d4a373";
+
+            document.querySelectorAll('#form-screen input[type=text], #form-screen input[type=tel], #form-screen input[type=date], #form-screen textarea').forEach(el => el.value = '');
+            setBase64ToPreview('aviso-foto-preview', null);
+            document.getElementById('aviso-foto-input').value = ""; 
+            configurarFechaActual();
+            implicadosTemporales = [];
+            actualizarListaImplicados();
+            mostrar('form-screen');
+        }
+
+        function editarAviso(id) {
+            const reg = db.find(r => r.id === id);
+            if(!reg) return;
+
+            editandoIntervencionId = id;
+            document.getElementById('titulo-form').innerText = `✏️ EDITAR AVISO #${id}`;
+            document.getElementById('btn-guardar-aviso').innerText = "Actualizar Aviso";
+            document.getElementById('btn-guardar-aviso').style.backgroundColor = "#ffcc00"; 
+
+            document.getElementById('fechaHora').value = reg.fechaISO;
+            document.getElementById('telefono').value = reg.telefono || '';
+            document.getElementById('comunicante').value = reg.comunicante || '';
+            document.getElementById('motivo').value = reg.motivo || '';
+            document.getElementById('lugar').value = reg.lugar || '';
+            document.getElementById('actuantes').value = reg.actuantes || '';
+            document.getElementById('observaciones').value = reg.observaciones || '';
+            
+            if(reg.fotoObservaciones) {
+                setBase64ToPreview('aviso-foto-preview', reg.fotoObservaciones);
+            } else {
+                setBase64ToPreview('aviso-foto-preview', null);
             }
+
+            implicadosTemporales = JSON.parse(JSON.stringify(reg.implicados || []));
+            actualizarListaImplicados();
+            
+            mostrar('form-screen');
         }
 
         function añadirImplicado(tipo) {
@@ -301,7 +863,7 @@
                 }
                 div.innerHTML += `<div style="background: #2c2c2e; border-left: 3px solid ${color}; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
                     <div>${icono} <b>${imp.dato}</b> - ${imp.nota} <br><span style="color:#8e8e93; font-size:11px;">${extras}</span></div>
-                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center;" onclick="borrarImplicado(${index})">X</span>
+                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center; cursor:pointer;" onclick="borrarImplicado(${index})">X</span>
                 </div>`;
             });
         }
@@ -315,27 +877,45 @@
             const motivo = document.getElementById('motivo').value.trim();
             if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
             
-            let nuevoID = 1;
-            if (db.length > 0) {
-                nuevoID = Math.max(...db.map(r => r.id)) + 1;
-            }
+            if (editandoIntervencionId) {
+                const index = db.findIndex(r => r.id === editandoIntervencionId);
+                if(index !== -1) {
+                    db[index].fechaISO = document.getElementById('fechaHora').value;
+                    db[index].telefono = document.getElementById('telefono').value.trim();
+                    db[index].comunicante = document.getElementById('comunicante').value.trim();
+                    db[index].motivo = motivo;
+                    db[index].lugar = document.getElementById('lugar').value.trim();
+                    db[index].actuantes = document.getElementById('actuantes').value.trim();
+                    db[index].observaciones = document.getElementById('observaciones').value.trim();
+                    db[index].implicados = [...implicadosTemporales];
+                    db[index].fotoObservaciones = getBase64FromPreview('aviso-foto-preview');
+                }
+                localStorage.setItem('db_policial_v3', JSON.stringify(db));
+                alert(`Aviso #${editandoIntervencionId} Actualizado.`);
+                verAvisoCompleto(editandoIntervencionId);
+                
+            } else {
+                let nuevoID = 1;
+                if (db.length > 0) nuevoID = Math.max(...db.map(r => r.id)) + 1;
 
-            const nuevaIntervencion = {
-                id: nuevoID, 
-                fechaISO: document.getElementById('fechaHora').value,
-                telefono: document.getElementById('telefono').value.trim(), 
-                comunicante: document.getElementById('comunicante').value.trim(),
-                motivo: motivo, 
-                lugar: document.getElementById('lugar').value.trim(),
-                observaciones: document.getElementById('observaciones').value.trim(), 
-                implicados: [...implicadosTemporales]
-            };
-            db.push(nuevaIntervencion);
-            localStorage.setItem('db_policial_v3', JSON.stringify(db));
-            
-            document.querySelectorAll('#form-screen input[type=text], #form-screen input[type=tel], #form-screen input[type=date], #form-screen textarea').forEach(el => el.value = '');
-            alert(`Aviso Guardado. Intervención Nº: #${nuevoID}`);
-            verAvisoCompleto(nuevoID);
+                const nuevaIntervencion = {
+                    id: nuevoID, 
+                    fechaISO: document.getElementById('fechaHora').value,
+                    telefono: document.getElementById('telefono').value.trim(), 
+                    comunicante: document.getElementById('comunicante').value.trim(),
+                    motivo: motivo, 
+                    lugar: document.getElementById('lugar').value.trim(),
+                    actuantes: document.getElementById('actuantes').value.trim(),
+                    observaciones: document.getElementById('observaciones').value.trim(), 
+                    implicados: [...implicadosTemporales],
+                    fotoObservaciones: getBase64FromPreview('aviso-foto-preview')
+                };
+                db.push(nuevaIntervencion);
+                localStorage.setItem('db_policial_v3', JSON.stringify(db));
+                
+                alert(`Aviso Guardado. Intervención Nº: #${nuevoID}`);
+                verAvisoCompleto(nuevoID);
+            }
         }
 
         function ejecutarBusqueda() {
@@ -383,7 +963,8 @@
                 if(!intervencionMostrada) {
                     if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
                        (reg.observaciones && reg.observaciones.toUpperCase().includes(termino)) || (reg.telefono && reg.telefono.includes(termino)) ||
-                       (reg.comunicante && reg.comunicante.toUpperCase().includes(termino))) {
+                       (reg.comunicante && reg.comunicante.toUpperCase().includes(termino)) ||
+                       (reg.actuantes && reg.actuantes.toUpperCase().includes(termino))) {
                         htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
                                 <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
                                 <div class="card-title">📞 Aviso: ${reg.motivo}</div>
@@ -398,8 +979,8 @@
                 const nota = dbNotas[i];
                 if(nota.texto.toUpperCase().includes(termino)) {
                     const fechaFormateada = formateaFecha(nota.fechaISO);
-                    htmlNot += `<div class="card" style="border-left-color: #30d158;">
-                        <div class="card-header"><span>🕒 ${fechaFormateada}</span></div>
+                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
+                        <div class="card-header"><span>🕒 ${fechaFormateada}</span><span>📄 Ver</span></div>
                         <div style="white-space: pre-wrap; font-size: 14px; color: #d1d1d6;">${nota.texto}</div>
                     </div>`;
                 }
@@ -415,6 +996,13 @@
         function verAvisoCompleto(idIntervencion) {
             const reg = db.find(r => r.id === idIntervencion);
             if(!reg) return;
+
+            document.getElementById('details-action-bar').innerHTML = `
+                <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
+                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                <button onclick="window.print()" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+            `;
+
             let htmlImplicados = '';
             if(reg.implicados && reg.implicados.length > 0) {
                 reg.implicados.forEach(imp => {
@@ -461,6 +1049,12 @@
                 <div class="detalle-bloque">
                     <span class="detalle-label">Observaciones y Desarrollo</span>
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
+                    ${reg.fotoObservaciones ? `<div style="margin-top:15px; text-align:center;"><img src="${reg.fotoObservaciones}" style="max-height:300px; max-width:100%; border-radius:8px;"></div>` : ''}
+                </div>
+                
+                <div class="actuantes-box">
+                    <div style="font-size: 12px; color: #8e8e93; text-transform: uppercase; margin-bottom: 5px;">Agentes Actuantes</div>
+                    <div class="actuantes-line">${reg.actuantes || 'No consta'}</div>
                 </div>
             `;
             document.getElementById('print-content').innerHTML = htmlDetalle;
