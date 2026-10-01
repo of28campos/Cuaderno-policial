@@ -71,7 +71,6 @@
         .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
         
-        /* Reducción brutal de espacios y fuentes en PDF */
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
@@ -154,7 +153,7 @@
                 <div class="form-group" style="flex: 1;"><label class="form-label">📅 FECHA NAC.</label><input type="date" id="reg-per-fecha-nac"></div>
                 <div class="form-group" style="flex: 1;"><label class="form-label">📞 TELÉFONO</label><input type="tel" id="reg-per-tlf" placeholder="Número"></div>
             </div>
-            <div class="form-group"><label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
+            <div class="form-group"><label class="form-label">🎯 MOTIVO DE LA IDENTIFICACIÓN</label><input type="text" id="reg-per-motivo" placeholder="Motivo..."></div>
             <div class="form-group"><label class="form-label">🏠 DOMICILIO</label><input type="text" id="reg-per-domicilio" placeholder="Dirección completa"></div>
             <div class="input-row">
                 <div class="form-group" style="flex: 1;"><label class="form-label">🚗 VEHÍCULO HABITUAL</label><input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo"></div>
@@ -168,6 +167,7 @@
                 </label>
                 <img id="reg-per-foto-preview" class="photo-preview" src="" alt="Previsualización">
             </div>
+            <div class="form-group"><label class="form-label">📝 OBSERVACIONES</label><textarea id="reg-per-obs" rows="3" placeholder="Información adicional..."></textarea></div>
         </div>
 
         <div id="form-fields-vehiculo" class="hidden">
@@ -176,7 +176,7 @@
                 <div class="form-group" style="flex: 1;"><label class="form-label">🎨 COLOR</label><input type="text" id="reg-veh-color" placeholder="Ej: Blanco"></div>
             </div>
             <div class="input-row">
-                <div class="form-group" style="flex: 1;"><label class="form-label">🏷️ MARCA</label><input type="text" id="reg-veh-marca" placeholder="Ej: Seat"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🏷️️ MARCA</label><input type="text" id="reg-veh-marca" placeholder="Ej: Seat"></div>
                 <div class="form-group" style="flex: 1;"><label class="form-label">🚘 MODELO</label><input type="text" id="reg-veh-modelo" placeholder="Ej: León"></div>
             </div>
             <div class="form-group"><label class="form-label">🔧 BASTIDOR (VIN)</label><input type="text" id="reg-veh-vin" placeholder="17 CARACTERES" style="text-transform: uppercase;"></div>
@@ -481,7 +481,7 @@
         }
 
         function limpiarFormularioPersona() {
-            const campos = ['reg-per-nombre', 'reg-per-dni', 'reg-per-lugar-nac', 'reg-per-fecha-nac', 'reg-per-tlf', 'reg-per-padres', 'reg-per-domicilio', 'reg-per-veh-desc', 'reg-per-veh-mat', 'reg-per-foto-input'];
+            const campos = ['reg-per-nombre', 'reg-per-dni', 'reg-per-lugar-nac', 'reg-per-fecha-nac', 'reg-per-tlf', 'reg-per-motivo', 'reg-per-domicilio', 'reg-per-veh-desc', 'reg-per-veh-mat', 'reg-per-obs', 'reg-per-foto-input'];
             campos.forEach(id => document.getElementById(id).value = '');
             setBase64ToPreview('reg-per-foto-preview', null);
         }
@@ -500,10 +500,11 @@
             document.getElementById('reg-per-lugar-nac').value = per.lugarNac || '';
             document.getElementById('reg-per-fecha-nac').value = per.fechaNac || '';
             document.getElementById('reg-per-tlf').value = per.tlf || '';
-            document.getElementById('reg-per-padres').value = per.padres || '';
+            document.getElementById('reg-per-motivo').value = per.motivo || '';
             document.getElementById('reg-per-domicilio').value = per.domicilio || '';
             document.getElementById('reg-per-veh-desc').value = per.vehDesc || '';
             document.getElementById('reg-per-veh-mat').value = per.vehMat || '';
+            document.getElementById('reg-per-obs').value = per.obs || '';
             if(per.foto) setBase64ToPreview('reg-per-foto-preview', per.foto);
         }
 
@@ -532,10 +533,11 @@
                     lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
                     fechaNac: document.getElementById('reg-per-fecha-nac').value,
                     tlf: document.getElementById('reg-per-tlf').value.trim(),
-                    padres: document.getElementById('reg-per-padres').value.trim(),
+                    motivo: document.getElementById('reg-per-motivo').value.trim(),
                     domicilio: document.getElementById('reg-per-domicilio').value.trim(),
                     vehDesc: document.getElementById('reg-per-veh-desc').value.trim(),
                     vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
+                    obs: document.getElementById('reg-per-obs').value.trim(),
                     foto: getBase64FromPreview('reg-per-foto-preview')
                 };
 
@@ -640,15 +642,19 @@
                         <div class="detalle-item"><span class="detalle-label">Nº DOCUMENTO</span>${per.dni || '-'}</div>
                     </div>
                     <div class="detalle-bloque page-protect">
-                        <div class="detalle-item"><span class="detalle-label">FECHA Y LUGAR NAC.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
-                        <div class="detalle-item"><span class="detalle-label">NOMBRE DE PADRES</span>${per.padres || '-'}</div>
+                        <div class="detalle-item"><span class="detalle-label">MOTIVO DE LA IDENTIFICACIÓN</span><b>${per.motivo || '-'}</b></div>
                     </div>
                     <div class="detalle-bloque page-protect">
+                        <div class="detalle-item"><span class="detalle-label">FECHA Y LUGAR NAC.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
                         <div class="detalle-item"><span class="detalle-label">TELÉFONO</span>${per.tlf || '-'}</div>
                         <div class="detalle-item"><span class="detalle-label">DOMICILIO</span>${per.domicilio || '-'}</div>
                     </div>
                     <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">VEHÍCULO HABITUAL</span>${per.vehDesc || '-'} | <b>MAT:</b> ${per.vehMat || '-'}</div>
+                    </div>
+                    <div class="detalle-bloque page-protect">
+                        <span class="detalle-label">OBSERVACIONES</span>
+                        <div class="detalle-item" style="white-space: pre-wrap;">${per.obs || '-'}</div>
                     </div>
                 `;
             } else {
@@ -1021,7 +1027,7 @@
                     }
                     htmlImplicados += `
                         <div class="implicado-box page-protect">
-                            <div>${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
+                            <div style="font-size: 16px;">${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
                             <div class="implicado-extras">${detallesExtra}</div>
                         </div>`;
                 });
