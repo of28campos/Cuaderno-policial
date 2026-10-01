@@ -38,15 +38,19 @@
         .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
         .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
 
-        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; }
-        .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
-        
+        /* REGLAS DE PROTECCIÓN CONTRA CORTES DE PÁGINA */
+        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; page-break-inside: avoid; break-inside: avoid; }
+        .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; page-break-inside: avoid; break-inside: avoid; }
+        .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; break-inside: avoid; }
+        img { page-break-inside: avoid; break-inside: avoid; }
+
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
         .detalle-label { color: #8e8e93; font-size: 12px; display: block; margin-bottom: 2px; font-weight: bold; }
 
         .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
         .pdf-header-left { display: flex; align-items: center; }
-        .pdf-header img { width: 160px; max-height: 80px; object-fit: contain; margin-right: 20px; }
+        /* AJUSTE DEL ESCUDO EN PANTALLA: Más margen para crecer en altura */
+        .pdf-header img { width: 130px; height: auto; max-height: 120px; object-fit: contain; margin-right: 20px; }
         .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
         .pdf-header-right { font-weight: bold; font-size: 16px; color: #d4a373; text-align: right; }
 
@@ -59,7 +63,6 @@
         .tab-btn { flex: 1; margin: 0; background-color: transparent; color: #8e8e93; padding: 10px; border-radius: 6px; font-size: 14px; }
         .tab-btn.active { background-color: #d4a373; color: #000; }
 
-        .actuantes-box { margin-top: 40px; text-align: right; }
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
@@ -69,7 +72,6 @@
         .pdf-mode { background-color: #fff !important; color: #000 !important; }
         .pdf-mode * { color: #000 !important; }
         
-        /* Reducción de tamaños y márgenes para que quepa más información */
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 10px !important; margin-bottom: 10px !important; font-size: 12px !important; }
         .pdf-mode .detalle-item { font-size: 12px !important; margin-bottom: 4px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 10px !important; margin-bottom: 1px !important; }
@@ -77,7 +79,9 @@
         .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; padding-bottom: 10px !important; margin-bottom: 12px !important; }
         .pdf-mode .pdf-header h2 { font-size: 16px !important; }
         .pdf-mode .pdf-header-right { color: #000 !important; font-size: 14px !important; }
-        .pdf-mode .pdf-header img { width: 130px !important; max-height: 60px !important; margin-right: 15px !important; }
+        
+        /* AJUSTE DEL ESCUDO EN PDF: Proporción liberada para evitar achatamiento */
+        .pdf-mode .pdf-header img { width: 120px !important; height: auto !important; max-height: 110px !important; margin-right: 15px !important; object-fit: contain !important; }
         
         .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 8px !important; margin-bottom: 8px !important; font-size: 12px !important; }
         .pdf-mode .implicado-extras { color: #333 !important; font-size: 11px !important; }
@@ -87,7 +91,6 @@
         
         .pdf-mode .no-print { display: none !important; }
 
-        /* Protecciones exclusivas de corte de página */
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
@@ -150,7 +153,7 @@
                 <div class="form-group" style="flex: 1;"><label class="form-label">📅 FECHA NAC.</label><input type="date" id="reg-per-fecha-nac"></div>
                 <div class="form-group" style="flex: 1;"><label class="form-label">📞 TELÉFONO</label><input type="tel" id="reg-per-tlf" placeholder="Número"></div>
             </div>
-            <div class="form-group"><label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
+            <div class="form-group"><label class="form-label">👨‍👩‍‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
             <div class="form-group"><label class="form-label">🏠 DOMICILIO</label><input type="text" id="reg-per-domicilio" placeholder="Dirección completa"></div>
             <div class="input-row">
                 <div class="form-group" style="flex: 1;"><label class="form-label">🚗 VEHÍCULO HABITUAL</label><input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo"></div>
@@ -306,17 +309,16 @@
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
 
-        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF CON PROTECCIÓN DE CORTES ---
+        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF ---
         async function generarPDF(nombreArchivo) {
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
             
-            // Entramos en modo PDF (activa el CSS especial para letra pequeña y fondos blancos)
             btnContainer.style.display = 'none';
             elemento.classList.add('pdf-mode');
             
             const opt = {
-                margin:       [10, 10, 10, 10], // Menos margen para que quepa más
+                margin:       [10, 10, 10, 10], 
                 filename:     nombreArchivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
@@ -619,6 +621,7 @@
                 document.getElementById('details-action-bar').innerHTML = `
                     <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
                     <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button onclick="borrarRegistroBase(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
                     <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
                 `;
 
@@ -653,6 +656,7 @@
                 document.getElementById('details-action-bar').innerHTML = `
                     <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
                     <button class="secondary" onclick="mostrarFormularioRegistro(${veh.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button onclick="borrarRegistroBase(${veh.id}, 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
                     <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
                 `;
 
@@ -679,6 +683,19 @@
                 `;
             }
             mostrar('details-screen');
+        }
+
+        function borrarRegistroBase(id, tipo) {
+            if(confirm("¿Seguro que quieres borrar este registro?")) {
+                if(tipo === 'personas') {
+                    dbPersonas = dbPersonas.filter(p => p.id !== id);
+                    localStorage.setItem('db_personas_v1', JSON.stringify(dbPersonas));
+                } else {
+                    dbVehiculos = dbVehiculos.filter(v => v.id !== id);
+                    localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
+                }
+                mostrar('records-screen');
+            }
         }
 
         function guardarNota() {
@@ -986,7 +1003,7 @@
 
             document.getElementById('details-action-bar').innerHTML = `
                 <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
-                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️️ Editar</button>
                 <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
             `;
 
@@ -1001,14 +1018,13 @@
                         if(imp.dom) detallesExtra += `<div><b>DOMICILIO:</b> ${imp.dom}</div>`;
                     }
                     htmlImplicados += `
-                        <div class="implicado-box">
+                        <div class="implicado-box page-protect">
                             <div style="font-size: 16px;">${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
                             <div class="implicado-extras">${detallesExtra}</div>
                         </div>`;
                 });
             } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
 
-            // IMPORTANTE: Separación de la imagen fuera del bloque para evitar cortes ciegos
             document.getElementById('print-content').innerHTML = `
                 <div class="pdf-header">
                     <div class="pdf-header-left">
@@ -1021,14 +1037,14 @@
                     <div class="pdf-header-right" style="white-space: pre;">Exp. num.: INT-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                 </div>
                 
-                <div class="detalle-bloque">
+                <div class="detalle-bloque page-protect">
                     <div class="detalle-item"><span class="detalle-label">FECHA Y HORA</span>${formateaFecha(reg.fechaISO)}</div>
                     <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
                     <div class="detalle-item"><span class="detalle-label">MOTIVO</span><b>${reg.motivo}</b></div>
                     <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
                     <div class="detalle-item"><span class="detalle-label">LUGAR DE LOS HECHOS</span>${reg.lugar || 'No consta'}</div>
                 </div>
-                <div class="detalle-bloque">
+                <div class="detalle-bloque page-protect">
                     <div class="detalle-item"><span class="detalle-label">DATOS DEL REQUIRENTE</span></div>
                     <div class="detalle-item"><b>Tlf:</b> ${reg.telefono || 'No consta'}</div>
                     <div class="detalle-item"><b>Nombre:</b> ${reg.comunicante || 'No consta'}</div>
@@ -1037,7 +1053,7 @@
                     <span class="detalle-label" style="margin-bottom: 8px;">IMPLICADOS / IDENTIFICADOS</span>
                     ${htmlImplicados}
                 </div>
-                <div class="detalle-bloque">
+                <div class="detalle-bloque page-protect">
                     <span class="detalle-label">OBSERVACIONES Y DESARROLLO</span>
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
                 </div>
