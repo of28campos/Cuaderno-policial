@@ -38,22 +38,21 @@
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
         .detalle-label { color: #8e8e93; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
-        .pdf-header { display: flex; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
+        .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
+        .pdf-header-left { display: flex; align-items: center; }
         .pdf-header img { width: 65px; height: auto; margin-right: 15px; }
         .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
+        .pdf-header-right { font-weight: bold; font-size: 16px; color: #d4a373; text-align: right; }
 
-        /* Estilos para input de foto */
         .photo-input-container { border: 1px dashed #d4a373; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; background-color: #151518;}
         .photo-input-container input[type="file"] { display: none; }
         .photo-preview { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px; display: none; }
         .photo-label { color: #d4a373; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* Estilos Tabs Registros */
         .tabs { display: flex; margin-bottom: 15px; background-color: #1c1c1e; border-radius: 8px; padding: 4px; border: 1px solid #2c2c2e; }
         .tab-btn { flex: 1; margin: 0; background-color: transparent; color: #8e8e93; padding: 10px; border-radius: 6px; font-size: 14px; }
         .tab-btn.active { background-color: #d4a373; color: #000; }
 
-        /* Estilos Bloque Actuantes (Firma) */
         .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; }
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
 
@@ -65,6 +64,7 @@
             .detalle-label { color: #555; }
             * { color: #000 !important; }
             .pdf-header { border-bottom: 2px solid #000; }
+            .pdf-header-right { color: #000; font-size: 18px; }
             .actuantes-line { border-top: 1px solid #000; }
         }
     </style>
@@ -105,12 +105,10 @@
 
         <input type="text" id="busqueda-registros" placeholder="Buscar nombre, DNI, matrícula..." onkeyup="ejecutarBusquedaRegistros()">
         
-        <div id="lista-registros" style="margin-top: 20px;">
-            <!-- Contenido dinámico -->
-        </div>
+        <div id="lista-registros" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- FORMULARIO DE REGISTRO (Personas o Vehículos) -->
+    <!-- FORMULARIO DE REGISTRO -->
     <div id="record-form-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="record-form-title">NUEVO REGISTRO</h2>
@@ -118,50 +116,23 @@
         </div>
 
         <div id="form-fields-persona" class="hidden">
-            <div class="form-group">
-                <label class="form-label">👤 NOMBRE Y APELLIDOS</label>
-                <input type="text" id="reg-per-nombre" placeholder="Nombre completo">
+            <div class="form-group"><label class="form-label">👤 NOMBRE Y APELLIDOS</label><input type="text" id="reg-per-nombre" placeholder="Nombre completo"></div>
+            <div class="input-row">
+                <div class="form-group" style="flex: 1;"><label class="form-label">🪪 Nº DOCUMENTO</label><input type="text" id="reg-per-dni" placeholder="DNI/NIE" style="text-transform: uppercase;"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🌍 NACIMIENTO</label><input type="text" id="reg-per-lugar-nac" placeholder="Lugar"></div>
             </div>
             <div class="input-row">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🪪 Nº DOCUMENTO</label>
-                    <input type="text" id="reg-per-dni" placeholder="DNI / NIE / Pasaporte" style="text-transform: uppercase;">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🌍 NACIMIENTO</label>
-                    <input type="text" id="reg-per-lugar-nac" placeholder="Lugar">
-                </div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">📅 FECHA NAC.</label><input type="date" id="reg-per-fecha-nac"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">📞 TELÉFONO</label><input type="tel" id="reg-per-tlf" placeholder="Número"></div>
             </div>
+            <div class="form-group"><label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
+            <div class="form-group"><label class="form-label">🏠 DOMICILIO</label><input type="text" id="reg-per-domicilio" placeholder="Dirección completa"></div>
             <div class="input-row">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">📅 FECHA NAC.</label>
-                    <input type="date" id="reg-per-fecha-nac">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">📞 TELÉFONO</label>
-                    <input type="tel" id="reg-per-tlf" placeholder="Número">
-                </div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🚗 VEHÍCULO HABITUAL</label><input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🔢 MATRÍCULA</label><input type="text" id="reg-per-veh-mat" placeholder="Matrícula" style="text-transform: uppercase;"></div>
             </div>
             <div class="form-group">
-                <label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label>
-                <input type="text" id="reg-per-padres" placeholder="Padre y Madre">
-            </div>
-            <div class="form-group">
-                <label class="form-label">🏠 DOMICILIO</label>
-                <input type="text" id="reg-per-domicilio" placeholder="Dirección completa">
-            </div>
-            <div class="input-row">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🚗 VEHÍCULO HABITUAL</label>
-                    <input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🔢 MATRÍCULA</label>
-                    <input type="text" id="reg-per-veh-mat" placeholder="Matrícula" style="text-transform: uppercase;">
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">📷 FOTOGRAFÍAS (ESCANEO OCR)</label>
+                <label class="form-label">📷 FOTOGRAFÍAS</label>
                 <label class="photo-input-container">
                     <span class="photo-label">📷 Tomar Foto / Galería</span>
                     <input type="file" id="reg-per-foto-input" accept="image/*" onchange="previsualizarFoto(event, 'reg-per-foto-preview')">
@@ -172,49 +143,25 @@
 
         <div id="form-fields-vehiculo" class="hidden">
             <div class="input-row">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🔢 MATRÍCULA</label>
-                    <input type="text" id="reg-veh-mat" placeholder="1234ABC" style="text-transform: uppercase;">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🎨 COLOR</label>
-                    <input type="text" id="reg-veh-color" placeholder="Ej: Blanco">
-                </div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🔢 MATRÍCULA</label><input type="text" id="reg-veh-mat" placeholder="1234ABC" style="text-transform: uppercase;"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🎨 COLOR</label><input type="text" id="reg-veh-color" placeholder="Ej: Blanco"></div>
             </div>
             <div class="input-row">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🏷️ MARCA</label>
-                    <input type="text" id="reg-veh-marca" placeholder="Ej: Seat">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">🚘 MODELO</label>
-                    <input type="text" id="reg-veh-modelo" placeholder="Ej: León">
-                </div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🏷️ MARCA</label><input type="text" id="reg-veh-marca" placeholder="Ej: Seat"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🚘 MODELO</label><input type="text" id="reg-veh-modelo" placeholder="Ej: León"></div>
             </div>
+            <div class="form-group"><label class="form-label">🔧 BASTIDOR (VIN)</label><input type="text" id="reg-veh-vin" placeholder="17 CARACTERES" style="text-transform: uppercase;"></div>
+            <div class="form-group"><label class="form-label">👤 TITULAR / CONDUCTOR</label><input type="text" id="reg-veh-titular" placeholder="Nombre completo"></div>
+            <div class="form-group"><label class="form-label">🪪 DOCUMENTO (DNI/NIE)</label><input type="text" id="reg-veh-titular-dni" placeholder="DNI/NIE" style="text-transform: uppercase;"></div>
             <div class="form-group">
-                <label class="form-label">🔧 NÚMERO DE BASTIDOR (VIN)</label>
-                <input type="text" id="reg-veh-vin" placeholder="17 CARACTERES DEL BASTIDOR" style="text-transform: uppercase;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">👤 TITULAR / CONDUCTOR</label>
-                <input type="text" id="reg-veh-titular" placeholder="Nombre completo del Titular o Conductor">
-            </div>
-            <div class="form-group">
-                <label class="form-label">🪪 DOCUMENTO (DNI/NIE)</label>
-                <input type="text" id="reg-veh-titular-dni" placeholder="DNI/NIE del Titular/Conductor" style="text-transform: uppercase;">
-            </div>
-            <div class="form-group">
-                <label class="form-label">📷 FOTOGRAFÍAS DEL VEHÍCULO</label>
+                <label class="form-label">📷 FOTOGRAFÍAS</label>
                 <label class="photo-input-container">
                     <span class="photo-label">📷 Tomar Foto / Galería</span>
                     <input type="file" id="reg-veh-foto-input" accept="image/*" onchange="previsualizarFoto(event, 'reg-veh-foto-preview')">
                 </label>
                 <img id="reg-veh-foto-preview" class="photo-preview" src="" alt="Previsualización">
             </div>
-            <div class="form-group">
-                <label class="form-label">📝 ANOTACIONES / OBSERVACIONES</label>
-                <textarea id="reg-veh-obs" rows="3" placeholder="Anotaciones sobre el estado del vehículo..."></textarea>
-            </div>
+            <div class="form-group"><label class="form-label">📝 OBSERVACIONES</label><textarea id="reg-veh-obs" rows="3" placeholder="Estado del vehículo..."></textarea></div>
         </div>
 
         <button id="btn-guardar-registro" onclick="guardarRegistro()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Registro</button>
@@ -227,6 +174,7 @@
             <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
         </div>
         <div class="form-group">
+            <input type="text" id="nuevaNotaActuante" placeholder="Agente actuante (Ej: 1234)">
             <textarea id="nuevaNota" rows="5" placeholder="Escribe aquí tu anotación libre (matrículas sueltas, recordatorios...)"></textarea>
             <button id="btn-guardar-nota" onclick="guardarNota()">Guardar Nota</button>
             <button id="btn-cancelar-nota" class="secondary hidden" onclick="cancelarEdicionNota()">Cancelar Edición</button>
@@ -251,11 +199,7 @@
                 <button class="btn-gps" onclick="obtenerGPS()">📍 GPS</button>
             </div>
         </div>
-        
-        <div class="form-group">
-            <label class="form-label">👮 AGENTES ACTUANTES</label>
-            <input type="text" id="actuantes" placeholder="Ej: Agentes 1234 y 5678...">
-        </div>
+        <div class="form-group"><label class="form-label">👮 AGENTES ACTUANTES</label><input type="text" id="actuantes" placeholder="Ej: Agentes 1234 y 5678..."></div>
         
         <div class="form-group">
             <label class="form-label">📝 Observaciones</label>
@@ -399,7 +343,6 @@
         function previsualizarFoto(event, previewId) {
             const file = event.target.files[0];
             const preview = document.getElementById(previewId);
-            
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -441,10 +384,8 @@
             document.getElementById('tab-personas').classList.remove('active');
             document.getElementById('tab-vehiculos').classList.remove('active');
             document.getElementById('tab-' + tab).classList.add('active');
-            
             const titulo = tab === 'personas' ? 'PERSONAS' : 'VEHÍCULOS';
             document.getElementById('records-header-text').innerText = titulo;
-            
             ejecutarBusquedaRegistros();
         }
 
@@ -459,7 +400,7 @@
                 limpiarFormularioPersona();
                 if(idEditar) cargarDatosPersonaForm(idEditar);
             } else {
-                document.getElementById('record-form-title').innerText = idEditar ? "✏️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
+                document.getElementById('record-form-title').innerText = idEditar ? "✏️️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
                 document.getElementById('form-fields-vehiculo').classList.remove('hidden');
                 limpiarFormularioVehiculo();
                 if(idEditar) cargarDatosVehiculoForm(idEditar);
@@ -467,7 +408,6 @@
             
             document.getElementById('btn-guardar-registro').innerText = idEditar ? "Actualizar Registro" : "Guardar Registro";
             document.getElementById('btn-guardar-registro').style.backgroundColor = idEditar ? "#ffcc00" : "#d4a373";
-            
             mostrar('record-form-screen');
         }
 
@@ -621,9 +561,11 @@
                 `;
 
                 htmlDetalle = `
-                    <div class="pdf-header">
-                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                        <h2>Ficha de Identificación Personal</h2>
+                    <div class="pdf-header" style="justify-content: flex-start;">
+                        <div class="pdf-header-left">
+                            <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                            <h2>Ficha de Identificación Personal</h2>
+                        </div>
                     </div>
                     ${per.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
                     <div class="detalle-bloque">
@@ -653,9 +595,11 @@
                 `;
 
                 htmlDetalle = `
-                    <div class="pdf-header">
-                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                        <h2>Ficha de Vehículo</h2>
+                    <div class="pdf-header" style="justify-content: flex-start;">
+                        <div class="pdf-header-left">
+                            <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                            <h2>Ficha de Vehículo</h2>
+                        </div>
                     </div>
                     ${veh.foto ? `<div style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
                     <div class="detalle-bloque">
@@ -693,14 +637,18 @@
 
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
+            const actuante = document.getElementById('nuevaNotaActuante').value.trim();
             if(!texto) return;
 
             if (editandoNotaId) {
                 const index = dbNotas.findIndex(n => n.id === editandoNotaId);
-                if (index !== -1) dbNotas[index].texto = texto;
+                if (index !== -1) {
+                    dbNotas[index].texto = texto;
+                    dbNotas[index].actuante = actuante;
+                }
                 alert("Nota actualizada.");
             } else {
-                const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto };
+                const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto, actuante: actuante };
                 dbNotas.push(nuevaNota);
             }
             
@@ -714,6 +662,7 @@
             if(!nota) return;
             editandoNotaId = id;
             document.getElementById('nuevaNota').value = nota.texto;
+            document.getElementById('nuevaNotaActuante').value = nota.actuante || '';
             document.getElementById('btn-guardar-nota').innerText = "Actualizar Nota";
             document.getElementById('btn-guardar-nota').style.backgroundColor = "#ffcc00"; 
             document.getElementById('btn-cancelar-nota').classList.remove('hidden');
@@ -723,6 +672,7 @@
         function cancelarEdicionNota() {
             editandoNotaId = null;
             document.getElementById('nuevaNota').value = '';
+            document.getElementById('nuevaNotaActuante').value = '';
             document.getElementById('btn-guardar-nota').innerText = "Guardar Nota";
             document.getElementById('btn-guardar-nota').style.backgroundColor = "#d4a373";
             document.getElementById('btn-cancelar-nota').classList.add('hidden');
@@ -771,14 +721,23 @@
             `;
 
             const htmlDetalle = `
-                <div class="pdf-header">
-                    <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                    <div>
-                        <h2>Anotación Operativa</h2>
-                        <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Fecha: ${formateaFecha(nota.fechaISO)}</div>
+                <div class="pdf-header" style="justify-content: flex-start;">
+                    <div class="pdf-header-left">
+                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                        <div>
+                            <h2>Anotación</h2>
+                            <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Fecha: ${formateaFecha(nota.fechaISO)}</div>
+                        </div>
                     </div>
                 </div>
+                
                 <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
+                
+                ${nota.actuante ? `
+                <div class="actuantes-box">
+                    <div style="font-size: 12px; color: #8e8e93; text-transform: uppercase; margin-bottom: 5px;">Agente Actuante</div>
+                    <div class="actuantes-line">${nota.actuante}</div>
+                </div>` : ''}
             `;
             document.getElementById('print-content').innerHTML = htmlDetalle;
             mostrar('details-screen');
@@ -977,7 +936,7 @@
 
             for (let i = dbNotas.length - 1; i >= 0; i--) {
                 const nota = dbNotas[i];
-                if(nota.texto.toUpperCase().includes(termino)) {
+                if(nota.texto.toUpperCase().includes(termino) || (nota.actuante && nota.actuante.toUpperCase().includes(termino))) {
                     const fechaFormateada = formateaFecha(nota.fechaISO);
                     htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
                         <div class="card-header"><span>🕒 ${fechaFormateada}</span><span>📄 Ver</span></div>
@@ -1023,10 +982,15 @@
 
             const htmlDetalle = `
                 <div class="pdf-header">
-                    <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                    <div>
-                        <h2>Diligencia de Intervención</h2>
-                        <div style="font-size: 14px; color: #8e8e93; margin-top: 4px;">Nº Registro: #${reg.id}</div>
+                    <div class="pdf-header-left">
+                        <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                        <div>
+                            <h2>INFORME DE SERVICIO</h2>
+                            <div class="no-print" style="font-size: 12px; color: #8e8e93; margin-top: 4px;">Ref. Interna App: #${reg.id}</div>
+                        </div>
+                    </div>
+                    <div class="pdf-header-right">
+                        INT-
                     </div>
                 </div>
                 
