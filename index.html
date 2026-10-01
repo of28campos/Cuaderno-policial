@@ -49,7 +49,6 @@
 
         .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
         .pdf-header-left { display: flex; align-items: center; }
-        /* AJUSTE DEL ESCUDO EN PANTALLA: Más margen para crecer en altura */
         .pdf-header img { width: 130px; height: auto; max-height: 120px; object-fit: contain; margin-right: 20px; }
         .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
         .pdf-header-right { font-weight: bold; font-size: 16px; color: #d4a373; text-align: right; }
@@ -67,27 +66,29 @@
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
         /* ==================================================
-           MODO PDF DE ALTA COMPATIBILIDAD Y TAMAÑO REDUCIDO
+           MODO PDF DE ALTA COMPACTACIÓN (LETRAS MUY PEQUEÑAS)
            ================================================== */
-        .pdf-mode { background-color: #fff !important; color: #000 !important; }
-        .pdf-mode * { color: #000 !important; }
+        .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
+        .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
         
-        .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 10px !important; margin-bottom: 10px !important; font-size: 12px !important; }
-        .pdf-mode .detalle-item { font-size: 12px !important; margin-bottom: 4px !important; }
-        .pdf-mode .detalle-label { color: #555 !important; font-size: 10px !important; margin-bottom: 1px !important; }
+        /* Reducción brutal de espacios y fuentes en PDF */
+        .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
+        .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
+        .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
         
-        .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; padding-bottom: 10px !important; margin-bottom: 12px !important; }
-        .pdf-mode .pdf-header h2 { font-size: 16px !important; }
-        .pdf-mode .pdf-header-right { color: #000 !important; font-size: 14px !important; }
+        .pdf-mode .pdf-header { border-bottom: 1px solid #000 !important; padding-bottom: 6px !important; margin-bottom: 8px !important; }
+        .pdf-mode .pdf-header h2 { font-size: 14px !important; margin-bottom: 2px !important; }
+        .pdf-mode .pdf-header-right { color: #000 !important; font-size: 12px !important; }
         
-        /* AJUSTE DEL ESCUDO EN PDF: Proporción liberada para evitar achatamiento */
-        .pdf-mode .pdf-header img { width: 120px !important; height: auto !important; max-height: 110px !important; margin-right: 15px !important; object-fit: contain !important; }
+        .pdf-mode .pdf-header img { width: 100px !important; height: auto !important; max-height: 60px !important; margin-right: 15px !important; object-fit: contain !important; }
         
-        .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 8px !important; margin-bottom: 8px !important; font-size: 12px !important; }
-        .pdf-mode .implicado-extras { color: #333 !important; font-size: 11px !important; }
+        .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 6px !important; margin-bottom: 4px !important; font-size: 10px !important; }
+        .pdf-mode .implicado-box div { font-size: 10px !important; }
+        .pdf-mode .implicado-extras { color: #333 !important; font-size: 9px !important; margin-top: 2px !important; }
         
-        .pdf-mode .actuantes-box { margin-top: 25px !important; }
-        .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 14px !important; }
+        .pdf-mode .actuantes-box { margin-top: 15px !important; }
+        .pdf-mode .actuantes-box div { font-size: 9px !important; }
+        .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 11px !important; padding-top: 4px !important; margin-top: 2px !important; }
         
         .pdf-mode .no-print { display: none !important; }
 
@@ -153,7 +154,7 @@
                 <div class="form-group" style="flex: 1;"><label class="form-label">📅 FECHA NAC.</label><input type="date" id="reg-per-fecha-nac"></div>
                 <div class="form-group" style="flex: 1;"><label class="form-label">📞 TELÉFONO</label><input type="tel" id="reg-per-tlf" placeholder="Número"></div>
             </div>
-            <div class="form-group"><label class="form-label">👨‍👩‍‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
+            <div class="form-group"><label class="form-label">👨‍👩‍👦 NOMBRE DE LOS PADRES</label><input type="text" id="reg-per-padres" placeholder="Padre y Madre"></div>
             <div class="form-group"><label class="form-label">🏠 DOMICILIO</label><input type="text" id="reg-per-domicilio" placeholder="Dirección completa"></div>
             <div class="input-row">
                 <div class="form-group" style="flex: 1;"><label class="form-label">🚗 VEHÍCULO HABITUAL</label><input type="text" id="reg-per-veh-desc" placeholder="Marca/Modelo"></div>
@@ -317,6 +318,7 @@
             btnContainer.style.display = 'none';
             elemento.classList.add('pdf-mode');
             
+            // Reducción al máximo de los márgenes en papel (10mm en lugar de 15)
             const opt = {
                 margin:       [10, 10, 10, 10], 
                 filename:     nombreArchivo + '.pdf',
@@ -633,19 +635,19 @@
                         </div>
                     </div>
                     ${per.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">NOMBRE Y APELLIDOS</span><b>${per.nombre || '-'}</b></div>
                         <div class="detalle-item"><span class="detalle-label">Nº DOCUMENTO</span>${per.dni || '-'}</div>
                     </div>
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">FECHA Y LUGAR NAC.</span>${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}</div>
                         <div class="detalle-item"><span class="detalle-label">NOMBRE DE PADRES</span>${per.padres || '-'}</div>
                     </div>
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">TELÉFONO</span>${per.tlf || '-'}</div>
                         <div class="detalle-item"><span class="detalle-label">DOMICILIO</span>${per.domicilio || '-'}</div>
                     </div>
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">VEHÍCULO HABITUAL</span>${per.vehDesc || '-'} | <b>MAT:</b> ${per.vehMat || '-'}</div>
                     </div>
                 `;
@@ -668,16 +670,16 @@
                         </div>
                     </div>
                     ${veh.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">MATRÍCULA</span><b>${veh.mat || '-'}</b></div>
                         <div class="detalle-item"><span class="detalle-label">MARCA Y MODELO</span>${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || ''})</div>
                         <div class="detalle-item"><span class="detalle-label">BASTIDOR (VIN)</span>${veh.vin || '-'}</div>
                     </div>
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">TITULAR / CONDUCTOR HABITUAL</span>${veh.titular || '-'}</div>
                         <div class="detalle-item"><span class="detalle-label">DNI TITULAR</span>${veh.titularDni || '-'}</div>
                     </div>
-                    <div class="detalle-bloque">
+                    <div class="detalle-bloque page-protect">
                         <div class="detalle-item"><span class="detalle-label">ANOTACIONES</span><div style="white-space:pre-wrap;">${veh.obs || '-'}</div></div>
                     </div>
                 `;
@@ -1003,7 +1005,7 @@
 
             document.getElementById('details-action-bar').innerHTML = `
                 <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
-                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️️ Editar</button>
+                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                 <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
             `;
 
@@ -1019,7 +1021,7 @@
                     }
                     htmlImplicados += `
                         <div class="implicado-box page-protect">
-                            <div style="font-size: 16px;">${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
+                            <div>${icono} <b>${imp.dato}</b> - ${imp.nota}</div>
                             <div class="implicado-extras">${detallesExtra}</div>
                         </div>`;
                 });
@@ -1039,9 +1041,9 @@
                 
                 <div class="detalle-bloque page-protect">
                     <div class="detalle-item"><span class="detalle-label">FECHA Y HORA</span>${formateaFecha(reg.fechaISO)}</div>
-                    <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
+                    <hr style="border:0; border-top:1px solid #2c2c2e; margin:6px 0;">
                     <div class="detalle-item"><span class="detalle-label">MOTIVO</span><b>${reg.motivo}</b></div>
-                    <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
+                    <hr style="border:0; border-top:1px solid #2c2c2e; margin:6px 0;">
                     <div class="detalle-item"><span class="detalle-label">LUGAR DE LOS HECHOS</span>${reg.lugar || 'No consta'}</div>
                 </div>
                 <div class="detalle-bloque page-protect">
@@ -1050,7 +1052,7 @@
                     <div class="detalle-item"><b>Nombre:</b> ${reg.comunicante || 'No consta'}</div>
                 </div>
                 <div class="detalle-bloque">
-                    <span class="detalle-label" style="margin-bottom: 8px;">IMPLICADOS / IDENTIFICADOS</span>
+                    <span class="detalle-label" style="margin-bottom: 6px;">IMPLICADOS / IDENTIFICADOS</span>
                     ${htmlImplicados}
                 </div>
                 <div class="detalle-bloque page-protect">
@@ -1058,7 +1060,7 @@
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
                 </div>
                 
-                ${reg.fotoObservaciones ? `<div class="page-protect" style="text-align:center; margin-top:15px; margin-bottom:15px;"><img src="${reg.fotoObservaciones}" style="max-height:250px; max-width:100%; border-radius:8px;"></div>` : ''}
+                ${reg.fotoObservaciones ? `<div class="page-protect" style="text-align:center; margin-top:10px; margin-bottom:10px;"><img src="${reg.fotoObservaciones}" style="max-height:220px; max-width:100%; border-radius:8px;"></div>` : ''}
                 
                 <div class="actuantes-box page-protect">
                     <div class="detalle-label">AGENTES ACTUANTES</div>
