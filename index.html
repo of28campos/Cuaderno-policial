@@ -49,7 +49,8 @@
 
         .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
         .pdf-header-left { display: flex; align-items: center; }
-        .pdf-header img { width: 65px; height: auto; margin-right: 15px; }
+        /* TAMAÑO DE ESCUDO AUMENTADO PARA COINCIDIR CON INFORME OFICIAL */
+        .pdf-header img { width: 160px; max-height: 80px; object-fit: contain; margin-right: 20px; }
         .pdf-header h2 { border: none; margin: 0; padding: 0; font-size: 18px; }
         .pdf-header-right { font-weight: bold; font-size: 16px; color: #d4a373; text-align: right; }
 
@@ -288,20 +289,17 @@
             elemento.classList.add('pdf-mode');
             
             const opt = {
-                margin:       [15, 15, 15, 15], // Márgenes: arriba, derecha, abajo, izquierda
+                margin:       [15, 15, 15, 15],
                 filename:     nombreArchivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                // MOTOR DE PAGINACIÓN ACTIVADO
                 pagebreak:    { mode: ['css', 'legacy'], avoid: ['.detalle-bloque', '.implicado-box', '.actuantes-box', 'img'] }
             };
 
             try {
-                // Generar Blob del PDF
                 const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
                 
-                // Intentar abrir el menú de compartir nativo de iOS
                 if (navigator.share && navigator.canShare) {
                     const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
                     if (navigator.canShare({ files: [archivo] })) {
@@ -319,7 +317,6 @@
                 console.error("Error al generar PDF:", error);
                 alert("Hubo un error al generar el PDF.");
             } finally {
-                // Salimos del modo PDF y restauramos los botones
                 elemento.classList.remove('pdf-mode');
                 btnContainer.style.display = 'flex';
             }
@@ -766,9 +763,7 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
-                
                 ${nota.actuante ? `
                 <div class="actuantes-box">
                     <div style="font-size: 12px; color: #8e8e93; font-weight: bold; margin-bottom: 5px;">AGENTE ACTUANTE</div>
@@ -1004,6 +999,7 @@
                 });
             } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
 
+            // MODIFICACIÓN DE LA CABECERA PARA FORZAR EL ESPACIO DEL TEXTO A BOLÍGRAFO
             document.getElementById('print-content').innerHTML = `
                 <div class="pdf-header">
                     <div class="pdf-header-left">
@@ -1013,7 +1009,7 @@
                             <div class="no-print" style="font-size: 12px; color: #8e8e93; margin-top: 4px;">Ref. Interna App: #${reg.id}</div>
                         </div>
                     </div>
-                    <div class="pdf-header-right">INT-</div>
+                    <div class="pdf-header-right" style="white-space: pre;">Exp. num.: INT-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                 </div>
                 
                 <div class="detalle-bloque">
