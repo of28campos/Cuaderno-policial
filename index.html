@@ -10,7 +10,6 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
         
-        /* CORRECCIÓN DE BUG IOS: Eliminado el text-transform y letter-spacing para evitar superposiciones en el PDF */
         h2 { margin-top: 0; color: #fff; font-size: 18px; }
         
         input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
@@ -39,9 +38,13 @@
         .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
         .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
 
-        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; }
+        /* REGLAS DE PROTECCIÓN CONTRA CORTES DE PÁGINA (page-break-inside: avoid) */
+        .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; page-break-inside: avoid; break-inside: avoid; }
+        .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; page-break-inside: avoid; break-inside: avoid; }
+        .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; break-inside: avoid; }
+        img { page-break-inside: avoid; break-inside: avoid; }
+
         .detalle-item { margin-bottom: 8px; font-size: 15px; }
-        /* CORRECCIÓN BUG IOS: Eliminado text-transform de la etiqueta para evitar cruces de texto */
         .detalle-label { color: #8e8e93; font-size: 12px; display: block; margin-bottom: 2px; font-weight: bold; }
 
         .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; padding-bottom: 15px; margin-bottom: 15px; }
@@ -59,14 +62,11 @@
         .tab-btn { flex: 1; margin: 0; background-color: transparent; color: #8e8e93; padding: 10px; border-radius: 6px; font-size: 14px; }
         .tab-btn.active { background-color: #d4a373; color: #000; }
 
-        .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; }
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
-
-        .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
         /* MODO PDF DE ALTA COMPATIBILIDAD */
-        .pdf-mode { background-color: #fff !important; color: #000 !important; padding: 20px !important; }
+        .pdf-mode { background-color: #fff !important; color: #000 !important; }
         .pdf-mode * { color: #000 !important; }
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; }
         .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; }
@@ -98,7 +98,7 @@
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- MÓDULO REGISTROS -->
+    <!-- MÓDULO REGISTROS (Personas y Vehículos) -->
     <div id="records-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="records-title" style="display: flex; align-items: center; gap: 8px;"><span>🗂️</span> <span id="records-header-text">PERSONAS</span></h2>
@@ -252,7 +252,6 @@
 
     <div id="details-screen" class="hidden">
         <div id="details-action-bar" class="no-print" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;"></div>
-        <!-- Ahora el contenedor no tiene fondos forzados en línea -->
         <div id="print-content"></div>
     </div>
 
@@ -279,28 +278,30 @@
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
 
-        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF ---
+        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF CON PAGINACIÓN ---
         async function generarPDF(nombreArchivo) {
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
             
-            // Entramos en modo PDF (aplica colores correctos en la captura)
+            // Entramos en modo PDF (colores claros para la impresión)
             btnContainer.style.display = 'none';
             elemento.classList.add('pdf-mode');
             
             const opt = {
-                margin:       [10, 10, 10, 10],
+                margin:       [15, 15, 15, 15], // Márgenes: arriba, derecha, abajo, izquierda
                 filename:     nombreArchivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // MOTOR DE PAGINACIÓN ACTIVADO
+                pagebreak:    { mode: ['css', 'legacy'], avoid: ['.detalle-bloque', '.implicado-box', '.actuantes-box', 'img'] }
             };
 
             try {
-                // Generar Blob
+                // Generar Blob del PDF
                 const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
                 
-                // Opción compartir nativo iOS/Android
+                // Intentar abrir el menú de compartir nativo de iOS
                 if (navigator.share && navigator.canShare) {
                     const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
                     if (navigator.canShare({ files: [archivo] })) {
@@ -315,10 +316,10 @@
                     html2pdf().set(opt).from(elemento).save();
                 }
             } catch (error) {
-                console.error("Error PDF:", error);
+                console.error("Error al generar PDF:", error);
                 alert("Hubo un error al generar el PDF.");
             } finally {
-                // Salimos de modo PDF y restauramos botones
+                // Salimos del modo PDF y restauramos los botones
                 elemento.classList.remove('pdf-mode');
                 btnContainer.style.display = 'flex';
             }
@@ -674,7 +675,6 @@
             }
         }
 
-        // --- SISTEMA DE NOTAS Y AVISOS ---
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
             const actuante = document.getElementById('nuevaNotaActuante').value.trim();
@@ -1035,7 +1035,7 @@
                 <div class="detalle-bloque">
                     <span class="detalle-label">OBSERVACIONES Y DESARROLLO</span>
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
-                    ${reg.fotoObservaciones ? `<div style="margin-top:15px; text-align:center;"><img src="${reg.fotoObservaciones}" style="max-height:300px; max-width:100%; border-radius:8px;"></div>` : ''}
+                    ${reg.fotoObservaciones ? `<div style="margin-top:15px; text-align:center;"><img src="${reg.fotoObservaciones}" style="max-height:400px; max-width:100%; border-radius:8px;"></div>` : ''}
                 </div>
                 
                 <div class="actuantes-box">
