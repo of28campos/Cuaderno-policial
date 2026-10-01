@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registro Operativo</title>
+    <!-- MOTOR PARA GENERAR PDF DE FORMA NATIVA EN IOS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
         h2 { margin-top: 0; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
@@ -97,14 +100,11 @@
                 <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
             </div>
         </div>
-
         <div class="tabs">
             <button id="tab-personas" class="tab-btn active" onclick="cambiarTabRegistros('personas')">👥 Personas</button>
             <button id="tab-vehiculos" class="tab-btn" onclick="cambiarTabRegistros('vehiculos')">🚗 Vehículos</button>
         </div>
-
         <input type="text" id="busqueda-registros" placeholder="Buscar nombre, DNI, matrícula..." onkeyup="ejecutarBusquedaRegistros()">
-        
         <div id="lista-registros" style="margin-top: 20px;"></div>
     </div>
 
@@ -114,7 +114,6 @@
             <h2 id="record-form-title">NUEVO REGISTRO</h2>
             <button class="secondary" onclick="mostrar('records-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">&larr; Volver</button>
         </div>
-
         <div id="form-fields-persona" class="hidden">
             <div class="form-group"><label class="form-label">👤 NOMBRE Y APELLIDOS</label><input type="text" id="reg-per-nombre" placeholder="Nombre completo"></div>
             <div class="input-row">
@@ -140,7 +139,6 @@
                 <img id="reg-per-foto-preview" class="photo-preview" src="" alt="Previsualización">
             </div>
         </div>
-
         <div id="form-fields-vehiculo" class="hidden">
             <div class="input-row">
                 <div class="form-group" style="flex: 1;"><label class="form-label">🔢 MATRÍCULA</label><input type="text" id="reg-veh-mat" placeholder="1234ABC" style="text-transform: uppercase;"></div>
@@ -163,7 +161,6 @@
             </div>
             <div class="form-group"><label class="form-label">📝 OBSERVACIONES</label><textarea id="reg-veh-obs" rows="3" placeholder="Estado del vehículo..."></textarea></div>
         </div>
-
         <button id="btn-guardar-registro" onclick="guardarRegistro()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Registro</button>
     </div>
 
@@ -247,7 +244,8 @@
 
     <div id="details-screen" class="hidden">
         <div id="details-action-bar" class="no-print" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;"></div>
-        <div id="print-content"></div>
+        <!-- Contenedor que será convertido a PDF -->
+        <div id="print-content" style="background-color: #fff; padding: 15px; border-radius: 8px; color: #000;"></div>
     </div>
 
     <div id="tools-screen" class="hidden">
@@ -272,6 +270,52 @@
         let editandoNotaId = null;
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
+
+        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF ---
+        async function generarPDF(nombreArchivo) {
+            const elemento = document.getElementById('print-content');
+            const btnContainer = document.getElementById('details-action-bar');
+            
+            // Ocultamos temporalmente los botones de la app
+            btnContainer.style.display = 'none';
+            
+            // Forzamos el texto negro y fondo blanco para la captura PDF
+            const opt = {
+                margin:       10,
+                filename:     nombreArchivo + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                // Generamos el archivo PDF en memoria
+                const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
+                
+                // Si estamos en un dispositivo móvil con soporte de compartir (iPhone/Android)
+                if (navigator.share && navigator.canShare) {
+                    const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+                    if (navigator.canShare({ files: [archivo] })) {
+                        await navigator.share({
+                            files: [archivo],
+                            title: opt.filename
+                        });
+                    } else {
+                        // Fallback móvil
+                        html2pdf().set(opt).from(elemento).save();
+                    }
+                } else {
+                    // En ordenador normal, descarga el PDF directamente
+                    html2pdf().set(opt).from(elemento).save();
+                }
+            } catch (error) {
+                console.error("Error al generar PDF:", error);
+                alert("Hubo un error al generar el documento PDF.");
+            } finally {
+                // Restauramos los botones
+                btnContainer.style.display = 'flex';
+            }
+        }
 
         function acceder() {
             const pin = document.getElementById('pinInput').value;
@@ -299,13 +343,8 @@
             document.getElementById(pantalla).classList.remove('hidden');
             
             if(pantalla === 'search-screen') ejecutarBusqueda(); 
-            if(pantalla === 'notes-screen') {
-                cancelarEdicionNota();
-                cargarNotas();
-            }
-            if(pantalla === 'records-screen') {
-                ejecutarBusquedaRegistros();
-            }
+            if(pantalla === 'notes-screen') { cancelarEdicionNota(); cargarNotas(); }
+            if(pantalla === 'records-screen') { ejecutarBusquedaRegistros(); }
         }
 
         function configurarFechaActual() {
@@ -376,9 +415,7 @@
             }
         }
 
-
         // --- MÓDULO DE REGISTROS (Personas / Vehículos) ---
-        
         function cambiarTabRegistros(tab) {
             tabRegistroActual = tab;
             document.getElementById('tab-personas').classList.remove('active');
@@ -400,7 +437,7 @@
                 limpiarFormularioPersona();
                 if(idEditar) cargarDatosPersonaForm(idEditar);
             } else {
-                document.getElementById('record-form-title').innerText = idEditar ? "✏️️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
+                document.getElementById('record-form-title').innerText = idEditar ? "✏️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
                 document.getElementById('form-fields-vehiculo').classList.remove('hidden');
                 limpiarFormularioVehiculo();
                 if(idEditar) cargarDatosVehiculoForm(idEditar);
@@ -459,14 +496,10 @@
                 if(!nombre && !dni) { alert("Introduce al menos un Nombre o DNI."); return; }
                 
                 const datos = {
-                    nombre: nombre, dni: dni,
-                    lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
-                    fechaNac: document.getElementById('reg-per-fecha-nac').value,
-                    tlf: document.getElementById('reg-per-tlf').value.trim(),
-                    padres: document.getElementById('reg-per-padres').value.trim(),
-                    domicilio: document.getElementById('reg-per-domicilio').value.trim(),
-                    vehDesc: document.getElementById('reg-per-veh-desc').value.trim(),
-                    vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
+                    nombre: nombre, dni: dni, lugarNac: document.getElementById('reg-per-lugar-nac').value.trim(),
+                    fechaNac: document.getElementById('reg-per-fecha-nac').value, tlf: document.getElementById('reg-per-tlf').value.trim(),
+                    padres: document.getElementById('reg-per-padres').value.trim(), domicilio: document.getElementById('reg-per-domicilio').value.trim(),
+                    vehDesc: document.getElementById('reg-per-veh-desc').value.trim(), vehMat: document.getElementById('reg-per-veh-mat').value.trim().toUpperCase(),
                     foto: getBase64FromPreview('reg-per-foto-preview')
                 };
 
@@ -485,12 +518,9 @@
 
                 const datos = {
                     mat: mat, color: document.getElementById('reg-veh-color').value.trim(),
-                    marca: document.getElementById('reg-veh-marca').value.trim(),
-                    modelo: document.getElementById('reg-veh-modelo').value.trim(),
-                    vin: document.getElementById('reg-veh-vin').value.trim().toUpperCase(),
-                    titular: document.getElementById('reg-veh-titular').value.trim(),
-                    titularDni: document.getElementById('reg-veh-titular-dni').value.trim().toUpperCase(),
-                    obs: document.getElementById('reg-veh-obs').value.trim(),
+                    marca: document.getElementById('reg-veh-marca').value.trim(), modelo: document.getElementById('reg-veh-modelo').value.trim(),
+                    vin: document.getElementById('reg-veh-vin').value.trim().toUpperCase(), titular: document.getElementById('reg-veh-titular').value.trim(),
+                    titularDni: document.getElementById('reg-veh-titular-dni').value.trim().toUpperCase(), obs: document.getElementById('reg-veh-obs').value.trim(),
                     foto: getBase64FromPreview('reg-veh-foto-preview')
                 };
 
@@ -528,7 +558,6 @@
                         </div>`;
                 });
                 if(!hayResultados) divLista.innerHTML = `<p style="color:#8e8e93; text-align:center;">No hay personas registradas.</p>`;
-
             } else {
                 const filtrados = dbVehiculos.filter(v => 
                     !termino || (v.mat && v.mat.includes(termino)) || 
@@ -548,8 +577,6 @@
         }
 
         function verRegistroCompleto(id, tipo) {
-            let titulo = "", htmlDetalle = "";
-
             if (tipo === 'personas') {
                 const per = dbPersonas.find(p => p.id === id);
                 if(!per) return;
@@ -558,9 +585,10 @@
                     <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
                     <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                     <button onclick="borrarRegistroBase(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
+                    <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
                 `;
 
-                htmlDetalle = `
+                document.getElementById('print-content').innerHTML = `
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
@@ -592,9 +620,10 @@
                     <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
                     <button class="secondary" onclick="mostrarFormularioRegistro(${veh.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                     <button onclick="borrarRegistroBase(${veh.id}, 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
+                    <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
                 `;
 
-                htmlDetalle = `
+                document.getElementById('print-content').innerHTML = `
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
@@ -616,7 +645,6 @@
                     </div>
                 `;
             }
-            document.getElementById('print-content').innerHTML = htmlDetalle;
             mostrar('details-screen');
         }
 
@@ -634,7 +662,6 @@
         }
 
         // --- SISTEMA DE NOTAS Y AVISOS ---
-
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
             const actuante = document.getElementById('nuevaNotaActuante').value.trim();
@@ -642,16 +669,12 @@
 
             if (editandoNotaId) {
                 const index = dbNotas.findIndex(n => n.id === editandoNotaId);
-                if (index !== -1) {
-                    dbNotas[index].texto = texto;
-                    dbNotas[index].actuante = actuante;
-                }
+                if (index !== -1) { dbNotas[index].texto = texto; dbNotas[index].actuante = actuante; }
                 alert("Nota actualizada.");
             } else {
                 const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto, actuante: actuante };
                 dbNotas.push(nuevaNota);
             }
-            
             localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
             cancelarEdicionNota();
             cargarNotas();
@@ -717,10 +740,10 @@
             document.getElementById('details-action-bar').innerHTML = `
                 <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
                 <button class="secondary" onclick="editarNota(${nota.id}); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                <button onclick="window.print()" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\\//g,'-')}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
             `;
 
-            const htmlDetalle = `
+            document.getElementById('print-content').innerHTML = `
                 <div class="pdf-header" style="justify-content: flex-start;">
                     <div class="pdf-header-left">
                         <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
@@ -730,16 +753,13 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
-                
                 ${nota.actuante ? `
                 <div class="actuantes-box">
                     <div style="font-size: 12px; color: #8e8e93; text-transform: uppercase; margin-bottom: 5px;">Agente Actuante</div>
                     <div class="actuantes-line">${nota.actuante}</div>
                 </div>` : ''}
             `;
-            document.getElementById('print-content').innerHTML = htmlDetalle;
             mostrar('details-screen');
         }
 
@@ -775,11 +795,8 @@
             document.getElementById('actuantes').value = reg.actuantes || '';
             document.getElementById('observaciones').value = reg.observaciones || '';
             
-            if(reg.fotoObservaciones) {
-                setBase64ToPreview('aviso-foto-preview', reg.fotoObservaciones);
-            } else {
-                setBase64ToPreview('aviso-foto-preview', null);
-            }
+            if(reg.fotoObservaciones) setBase64ToPreview('aviso-foto-preview', reg.fotoObservaciones);
+            else setBase64ToPreview('aviso-foto-preview', null);
 
             implicadosTemporales = JSON.parse(JSON.stringify(reg.implicados || []));
             actualizarListaImplicados();
@@ -858,20 +875,14 @@
                 if (db.length > 0) nuevoID = Math.max(...db.map(r => r.id)) + 1;
 
                 const nuevaIntervencion = {
-                    id: nuevoID, 
-                    fechaISO: document.getElementById('fechaHora').value,
-                    telefono: document.getElementById('telefono').value.trim(), 
-                    comunicante: document.getElementById('comunicante').value.trim(),
-                    motivo: motivo, 
-                    lugar: document.getElementById('lugar').value.trim(),
-                    actuantes: document.getElementById('actuantes').value.trim(),
-                    observaciones: document.getElementById('observaciones').value.trim(), 
-                    implicados: [...implicadosTemporales],
-                    fotoObservaciones: getBase64FromPreview('aviso-foto-preview')
+                    id: nuevoID, fechaISO: document.getElementById('fechaHora').value,
+                    telefono: document.getElementById('telefono').value.trim(), comunicante: document.getElementById('comunicante').value.trim(),
+                    motivo: motivo, lugar: document.getElementById('lugar').value.trim(),
+                    actuantes: document.getElementById('actuantes').value.trim(), observaciones: document.getElementById('observaciones').value.trim(), 
+                    implicados: [...implicadosTemporales], fotoObservaciones: getBase64FromPreview('aviso-foto-preview')
                 };
                 db.push(nuevaIntervencion);
                 localStorage.setItem('db_policial_v3', JSON.stringify(db));
-                
                 alert(`Aviso Guardado. Intervención Nº: #${nuevoID}`);
                 verAvisoCompleto(nuevoID);
             }
@@ -922,8 +933,7 @@
                 if(!intervencionMostrada) {
                     if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
                        (reg.observaciones && reg.observaciones.toUpperCase().includes(termino)) || (reg.telefono && reg.telefono.includes(termino)) ||
-                       (reg.comunicante && reg.comunicante.toUpperCase().includes(termino)) ||
-                       (reg.actuantes && reg.actuantes.toUpperCase().includes(termino))) {
+                       (reg.comunicante && reg.comunicante.toUpperCase().includes(termino)) || (reg.actuantes && reg.actuantes.toUpperCase().includes(termino))) {
                         htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
                                 <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
                                 <div class="card-title">📞 Aviso: ${reg.motivo}</div>
@@ -959,7 +969,7 @@
             document.getElementById('details-action-bar').innerHTML = `
                 <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
                 <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                <button onclick="window.print()" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
             `;
 
             let htmlImplicados = '';
@@ -980,7 +990,7 @@
                 });
             } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
 
-            const htmlDetalle = `
+            document.getElementById('print-content').innerHTML = `
                 <div class="pdf-header">
                     <div class="pdf-header-left">
                         <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
@@ -1021,7 +1031,6 @@
                     <div class="actuantes-line">${reg.actuantes || 'No consta'}</div>
                 </div>
             `;
-            document.getElementById('print-content').innerHTML = htmlDetalle;
             mostrar('details-screen');
         }
     </script>
