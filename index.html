@@ -42,10 +42,13 @@
             body { background-color: #fff; color: #000; padding: 0; }
             .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen { display: none !important; }
             #details-screen { display: block !important; }
-            .detalle-bloque { background-color: #fff; border: 1px solid #ccc; color: #000; }
+            .detalle-bloque { background-color: #fff; border: 1px solid #ccc; color: #000; margin-bottom: 10px; }
             .detalle-label { color: #555; }
             * { color: #000 !important; }
-            h2 { color: #000; border-bottom: 2px solid #000; padding-bottom: 5px; }
+            /* Ajustes para que el encabezado con escudo se vea bien en papel */
+            .pdf-header { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+            .pdf-header img { width: 70px; height: auto; margin-right: 15px; }
+            .pdf-header h2 { border: none; margin: 0; padding: 0; }
         }
     </style>
 </head>
@@ -58,7 +61,6 @@
         <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
     </div>
 
-    <!-- PANTALLA PRINCIPAL ACTUALIZADA -->
     <div id="main-screen" class="hidden">
         <h2>Gestión Operativa</h2>
         <button onclick="mostrar('form-screen')">📞 Registrar Llamada / Aviso</button>
@@ -68,44 +70,27 @@
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- MÓDULO BLOC DE NOTAS -->
     <div id="notes-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2>📝 Bloc de Notas</h2>
             <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
         </div>
-        
         <div class="form-group">
-            <textarea id="nuevaNota" rows="5" placeholder="Escribe aquí tu anotación libre (matrículas sueltas, recordatorios, legislación...)"></textarea>
+            <textarea id="nuevaNota" rows="5" placeholder="Escribe aquí tu anotación libre (matrículas sueltas, recordatorios...)"></textarea>
             <button onclick="guardarNota()">Guardar Nota</button>
         </div>
-
         <div id="lista-notas" style="margin-top: 25px;"></div>
     </div>
 
-    <!-- PANTALLA REGISTRO -->
     <div id="form-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2>📞 Registrar Aviso</h2>
             <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
         </div>
-
-        <div class="form-group">
-            <label class="form-label">🕒 Fecha y Hora</label>
-            <input type="datetime-local" id="fechaHora">
-        </div>
-        <div class="form-group">
-            <label class="form-label">📞 Teléfono Requirente</label>
-            <input type="tel" id="telefono" placeholder="Nº de teléfono">
-        </div>
-        <div class="form-group">
-            <label class="form-label">👤 Nombre del Comunicante</label>
-            <input type="text" id="comunicante" placeholder="Nombre completo del comunicante">
-        </div>
-        <div class="form-group">
-            <label class="form-label">🎯 Motivo de la Llamada</label>
-            <input type="text" id="motivo" placeholder="Ej: Vado permanente, Ruido, Alarma...">
-        </div>
+        <div class="form-group"><label class="form-label">🕒 Fecha y Hora</label><input type="datetime-local" id="fechaHora"></div>
+        <div class="form-group"><label class="form-label">📞 Teléfono Requirente</label><input type="tel" id="telefono" placeholder="Nº de teléfono"></div>
+        <div class="form-group"><label class="form-label">👤 Nombre del Comunicante</label><input type="text" id="comunicante" placeholder="Nombre completo del comunicante"></div>
+        <div class="form-group"><label class="form-label">🎯 Motivo de la Llamada</label><input type="text" id="motivo" placeholder="Ej: Vado permanente, Ruido, Alarma..."></div>
         <div class="form-group">
             <label class="form-label">📍 Lugar de los Hechos</label>
             <div class="input-row">
@@ -113,67 +98,50 @@
                 <button class="btn-gps" onclick="obtenerGPS()">📍 GPS</button>
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label">📝 Observaciones</label>
-            <textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea>
-        </div>
+        <div class="form-group"><label class="form-label">📝 Observaciones</label><textarea id="observaciones" rows="3" placeholder="Detalles de la llamada o indicaciones dadas..."></textarea></div>
 
         <div class="form-group" style="background-color: #151518; padding: 15px; border-radius: 8px; border: 1px solid #2c2c2e;">
             <label class="form-label" style="color: #fff; margin-bottom: 10px;">🔗 Implicados en la intervención</label>
-            
-            <!-- AÑADIR PERSONA ACTUALIZADO -->
             <div style="background-color: #1c1c1e; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
                 <label style="font-size: 12px; color: #30d158; font-weight: bold;">👤 AÑADIR PERSONA</label>
                 <input type="text" id="dniPer" placeholder="DNI / NIE / Pasaporte" style="text-transform: uppercase; margin-top: 8px; margin-bottom: 8px;">
                 <input type="text" id="nombrePer" placeholder="Nombre y apellidos" style="margin-bottom: 8px;">
-                
                 <span style="font-size: 12px; color: #8e8e93; display: block; margin-bottom: 4px;">Fecha de Nacimiento</span>
                 <input type="date" id="fnacPer" style="margin-bottom: 8px;">
-                
                 <input type="tel" id="tlfPer" placeholder="Teléfono de contacto" style="margin-bottom: 8px;">
                 <input type="text" id="domPer" placeholder="Domicilio completo" style="margin-bottom: 8px;">
-                
                 <button class="add-btn" onclick="añadirImplicado('persona')">&plus; Vincular Persona</button>
             </div>
-
-            <!-- AÑADIR VEHÍCULO -->
             <div style="background-color: #1c1c1e; padding: 10px; border-radius: 6px;">
                 <label style="font-size: 12px; color: #5e5ce6; font-weight: bold;">🚗 AÑADIR VEHÍCULO</label>
                 <input type="text" id="matVeh" placeholder="Matrícula" style="text-transform: uppercase; margin-top: 8px; margin-bottom: 8px;">
                 <input type="text" id="descVeh" placeholder="Marca, modelo y color" style="margin-bottom: 8px;">
                 <button class="add-btn" onclick="añadirImplicado('vehiculo')">&plus; Vincular Vehículo</button>
             </div>
-
             <div id="lista-implicados-temp" style="margin-top: 15px;"></div>
         </div>
-        
         <button onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
-    <!-- PANTALLA BUSCADOR -->
     <div id="search-screen" class="hidden">
         <h2>Buscador Operativo</h2>
-        <input type="text" id="busqueda" placeholder="Buscar DNI, Matrícula o Motivo..." onkeyup="ejecutarBusqueda()" style="text-transform: uppercase;">
+        <input type="text" id="busqueda" placeholder="Buscar DNI, Matrícula, Motivo o Notas..." onkeyup="ejecutarBusqueda()" style="text-transform: uppercase;">
         <button class="secondary" onclick="mostrar('main-screen')">Volver al Menú</button>
         
         <div id="resultados-vehiculos"></div>
         <div id="resultados-personas"></div>
         <div id="resultados-intervenciones"></div>
+        <div id="resultados-notas"></div>
     </div>
 
-    <!-- PANTALLA DE DETALLE COMPLETO Y PDF -->
     <div id="details-screen" class="hidden">
         <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
             <button class="secondary" onclick="mostrar('search-screen')" style="width: auto; padding: 8px 15px; margin: 0; border-radius: 8px;">&larr; Volver</button>
             <button onclick="window.print()" style="width: auto; padding: 8px 15px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ Crear PDF</button>
         </div>
-        
-        <div id="print-content">
-            <!-- El contenido se inyecta por JS -->
-        </div>
+        <div id="print-content"></div>
     </div>
 
-    <!-- PANTALLA UTILIDADES -->
     <div id="tools-screen" class="hidden">
         <h2>Normativa y Enlaces</h2>
         <a href="https://www.boe.es/biblioteca_juridica/codigos/codigo.php?id=020_Codigo_de_Trafico_y_Seguridad_Vial" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
@@ -186,7 +154,8 @@
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('db_policial_v2')) || [];
+        // Nueva versión v3 para resetear el contador a 1
+        let db = JSON.parse(localStorage.getItem('db_policial_v3')) || [];
         let dbNotas = JSON.parse(localStorage.getItem('db_notas_v1')) || [];
         let implicadosTemporales = [];
 
@@ -256,15 +225,10 @@
             }
         }
 
-        // --- SISTEMA DE NOTAS LIBRES ---
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
             if(!texto) return;
-            const nuevaNota = {
-                id: Date.now(),
-                fechaISO: new Date().toISOString(),
-                texto: texto
-            };
+            const nuevaNota = { id: Date.now(), fechaISO: new Date().toISOString(), texto: texto };
             dbNotas.push(nuevaNota);
             localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
             document.getElementById('nuevaNota').value = '';
@@ -278,7 +242,6 @@
                 div.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No hay notas guardadas.</p>';
                 return;
             }
-            // Mostrar de más nueva a más antigua
             [...dbNotas].reverse().forEach((n, indexInvertido) => {
                 const indiceReal = dbNotas.length - 1 - indexInvertido;
                 const fechaF = formateaFecha(n.fechaISO);
@@ -301,32 +264,23 @@
             }
         }
 
-        // --- SISTEMA DE IMPLICADOS ---
         function añadirImplicado(tipo) {
             let dato = '', nota = '', fnac = '', tlf = '', dom = '';
-            
             if (tipo === 'persona') {
                 dato = document.getElementById('dniPer').value.trim().toUpperCase();
                 nota = document.getElementById('nombrePer').value.trim();
                 fnac = document.getElementById('fnacPer').value;
                 tlf = document.getElementById('tlfPer').value.trim();
                 dom = document.getElementById('domPer').value.trim();
-                
                 if(!dato && !nota) return;
-                
-                document.getElementById('dniPer').value = ''; 
-                document.getElementById('nombrePer').value = '';
-                document.getElementById('fnacPer').value = '';
-                document.getElementById('tlfPer').value = '';
-                document.getElementById('domPer').value = '';
+                document.getElementById('dniPer').value = ''; document.getElementById('nombrePer').value = '';
+                document.getElementById('fnacPer').value = ''; document.getElementById('tlfPer').value = ''; document.getElementById('domPer').value = '';
             } else {
                 dato = document.getElementById('matVeh').value.trim().toUpperCase();
                 nota = document.getElementById('descVeh').value.trim();
                 if(!dato && !nota) return;
-                document.getElementById('matVeh').value = ''; 
-                document.getElementById('descVeh').value = '';
+                document.getElementById('matVeh').value = ''; document.getElementById('descVeh').value = '';
             }
-            
             implicadosTemporales.push({ tipo, dato, nota, fnac, tlf, dom });
             actualizarListaImplicados();
         }
@@ -343,12 +297,8 @@
                     if(imp.tlf) extras += ` | Tlf: ${imp.tlf}`;
                     if(imp.dom) extras += ` | Dom: ${imp.dom}`;
                 }
-                
                 div.innerHTML += `<div style="background: #2c2c2e; border-left: 3px solid ${color}; padding: 8px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; display: flex; justify-content: space-between;">
-                    <div>
-                        ${icono} <b>${imp.dato}</b> - ${imp.nota} <br>
-                        <span style="color:#8e8e93; font-size:11px;">${extras}</span>
-                    </div>
+                    <div>${icono} <b>${imp.dato}</b> - ${imp.nota} <br><span style="color:#8e8e93; font-size:11px;">${extras}</span></div>
                     <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center;" onclick="borrarImplicado(${index})">X</span>
                 </div>`;
             });
@@ -362,26 +312,29 @@
         function guardarAviso() {
             const motivo = document.getElementById('motivo').value.trim();
             if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
+            
+            // GENERADOR DE ID CORRELATIVO EMPEZANDO POR 1
+            let nuevoID = 1;
+            if (db.length > 0) {
+                nuevoID = Math.max(...db.map(r => r.id)) + 1;
+            }
 
-            const numIntervencion = Math.floor(100000 + Math.random() * 900000);
             const nuevaIntervencion = {
-                id: numIntervencion,
+                id: nuevoID, 
                 fechaISO: document.getElementById('fechaHora').value,
-                telefono: document.getElementById('telefono').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(), 
                 comunicante: document.getElementById('comunicante').value.trim(),
-                motivo: motivo,
+                motivo: motivo, 
                 lugar: document.getElementById('lugar').value.trim(),
-                observaciones: document.getElementById('observaciones').value.trim(),
+                observaciones: document.getElementById('observaciones').value.trim(), 
                 implicados: [...implicadosTemporales]
             };
-
             db.push(nuevaIntervencion);
-            localStorage.setItem('db_policial_v2', JSON.stringify(db));
+            localStorage.setItem('db_policial_v3', JSON.stringify(db));
             
             document.querySelectorAll('#form-screen input[type=text], #form-screen input[type=tel], #form-screen input[type=date], #form-screen textarea').forEach(el => el.value = '');
-            alert(`Aviso Guardado. Intervención Nº: #${numIntervencion}`);
-            
-            verAvisoCompleto(numIntervencion);
+            alert(`Aviso Guardado. Intervención Nº: #${nuevoID}`);
+            verAvisoCompleto(nuevoID);
         }
 
         function ejecutarBusqueda() {
@@ -389,23 +342,22 @@
             const divVeh = document.getElementById('resultados-vehiculos');
             const divPer = document.getElementById('resultados-personas');
             const divInt = document.getElementById('resultados-intervenciones');
+            const divNot = document.getElementById('resultados-notas');
             
-            divVeh.innerHTML = ''; divPer.innerHTML = ''; divInt.innerHTML = '';
+            divVeh.innerHTML = ''; divPer.innerHTML = ''; divInt.innerHTML = ''; divNot.innerHTML = '';
             if(!termino) return;
 
-            let htmlVeh = ''; let htmlPer = ''; let htmlInt = '';
+            let htmlVeh = ''; let htmlPer = ''; let htmlInt = ''; let htmlNot = '';
 
             for (let i = db.length - 1; i >= 0; i--) {
                 const reg = db[i];
                 let intervencionMostrada = false;
                 const fechaFormateada = formateaFecha(reg.fechaISO);
-                
                 const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto(${reg.id})" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
 
                 if(reg.implicados && reg.implicados.length > 0) {
                     reg.implicados.forEach(imp => {
                         if(imp.dato.includes(termino) || imp.nota.toUpperCase().includes(termino)) {
-                            
                             let relacionadosHtml = '';
                             let otrosImplicados = reg.implicados.filter(o => o.dato !== imp.dato);
                             if(otrosImplicados.length > 0) {
@@ -413,7 +365,6 @@
                                 otrosImplicados.forEach(o => { relacionadosHtml += `↳ ${o.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${o.dato} (${o.nota})<br>`; });
                                 relacionadosHtml += `</div>`;
                             }
-
                             const tarjeta = `<div class="card">
                                     <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
                                     <div class="card-title"><span class="badge ${imp.tipo === 'vehiculo' ? 'badge-veh' : 'badge-per'}">${imp.tipo === 'vehiculo' ? 'VEHÍCULO' : 'PERSONA'}</span> ${imp.dato}</div>
@@ -422,7 +373,6 @@
                                     ${relacionadosHtml}
                                     ${botonDetalle}
                                 </div>`;
-
                             if(imp.tipo === 'vehiculo') htmlVeh += tarjeta; else htmlPer += tarjeta;
                             intervencionMostrada = true;
                         }
@@ -433,7 +383,6 @@
                     if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
                        (reg.observaciones && reg.observaciones.toUpperCase().includes(termino)) || (reg.telefono && reg.telefono.includes(termino)) ||
                        (reg.comunicante && reg.comunicante.toUpperCase().includes(termino))) {
-                        
                         htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
                                 <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
                                 <div class="card-title">📞 Aviso: ${reg.motivo}</div>
@@ -444,16 +393,27 @@
                 }
             }
 
+            for (let i = dbNotas.length - 1; i >= 0; i--) {
+                const nota = dbNotas[i];
+                if(nota.texto.toUpperCase().includes(termino)) {
+                    const fechaFormateada = formateaFecha(nota.fechaISO);
+                    htmlNot += `<div class="card" style="border-left-color: #30d158;">
+                        <div class="card-header"><span>🕒 ${fechaFormateada}</span></div>
+                        <div style="white-space: pre-wrap; font-size: 14px; color: #d1d1d6;">${nota.texto}</div>
+                    </div>`;
+                }
+            }
+
             if(htmlVeh) divVeh.innerHTML = `<div class="section-title">🚗 VEHÍCULOS ENCONTRADOS</div>` + htmlVeh;
             if(htmlPer) divPer.innerHTML = `<div class="section-title">👤 PERSONAS ENCONTRADAS</div>` + htmlPer;
             if(htmlInt) divInt.innerHTML = `<div class="section-title">📞 AVISOS / MOTIVOS</div>` + htmlInt;
-            if(!htmlVeh && !htmlPer && !htmlInt) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No se han encontrado registros.</p>';
+            if(htmlNot) divNot.innerHTML = `<div class="section-title">📝 NOTAS LIBRES ENCONTRADAS</div>` + htmlNot;
+            if(!htmlVeh && !htmlPer && !htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No se han encontrado registros ni notas.</p>';
         }
 
         function verAvisoCompleto(idIntervencion) {
             const reg = db.find(r => r.id === idIntervencion);
             if(!reg) return;
-
             let htmlImplicados = '';
             if(reg.implicados && reg.implicados.length > 0) {
                 reg.implicados.forEach(imp => {
@@ -470,13 +430,17 @@
                             <div style="color:#d1d1d6; font-size:14px; margin-top: 5px;">${detallesExtra}</div>
                         </div>`;
                 });
-            } else {
-                htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`;
-            }
+            } else { htmlImplicados = `<div class="detalle-item" style="color:#8e8e93;">Sin identificados vinculados.</div>`; }
 
+            // MODIFICACIÓN: Cabecera con imagen del escudo preparada para impresión
             const htmlDetalle = `
-                <h2>Diligencia de Intervención</h2>
-                <div style="font-size: 14px; margin-bottom: 15px; color: #8e8e93;">Nº Registro: #${reg.id}</div>
+                <div class="pdf-header">
+                    <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
+                    <div>
+                        <h2>Diligencia de Intervención</h2>
+                        <div style="font-size: 14px; color: #8e8e93;">Nº Registro: #${reg.id}</div>
+                    </div>
+                </div>
                 
                 <div class="detalle-bloque">
                     <div class="detalle-item"><span class="detalle-label">Fecha y Hora</span>${formateaFecha(reg.fechaISO)}</div>
@@ -485,24 +449,20 @@
                     <hr style="border:0; border-top:1px solid #2c2c2e; margin:10px 0;">
                     <div class="detalle-item"><span class="detalle-label">Lugar de los hechos</span>${reg.lugar || 'No consta'}</div>
                 </div>
-
                 <div class="detalle-bloque">
                     <div class="detalle-item"><span class="detalle-label">Datos del Requirente</span></div>
                     <div class="detalle-item"><b>Tlf:</b> ${reg.telefono || 'No consta'}</div>
                     <div class="detalle-item"><b>Nombre:</b> ${reg.comunicante || 'No consta'}</div>
                 </div>
-
                 <div class="detalle-bloque">
                     <span class="detalle-label" style="margin-bottom: 8px;">Implicados / Identificados</span>
                     ${htmlImplicados}
                 </div>
-
                 <div class="detalle-bloque">
                     <span class="detalle-label">Observaciones y Desarrollo</span>
                     <div class="detalle-item" style="white-space: pre-wrap;">${reg.observaciones || 'Sin observaciones adicionales.'}</div>
                 </div>
             `;
-
             document.getElementById('print-content').innerHTML = htmlDetalle;
             mostrar('details-screen');
         }
