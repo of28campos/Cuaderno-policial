@@ -70,25 +70,19 @@
            ================================================== */
         .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
-        
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
-        
         .pdf-mode .pdf-header { border-bottom: 1px solid #000 !important; padding-bottom: 6px !important; margin-bottom: 8px !important; }
         .pdf-mode .pdf-header h2 { font-size: 14px !important; margin-bottom: 2px !important; }
         .pdf-mode .pdf-header-right { color: #000 !important; font-size: 12px !important; }
-        
         .pdf-mode .pdf-header img { width: 100px !important; height: auto !important; max-height: 60px !important; margin-right: 15px !important; object-fit: contain !important; }
-        
         .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 6px !important; margin-bottom: 4px !important; font-size: 10px !important; }
         .pdf-mode .implicado-box div { font-size: 10px !important; }
         .pdf-mode .implicado-extras { color: #333 !important; font-size: 9px !important; margin-top: 2px !important; }
-        
         .pdf-mode .actuantes-box { margin-top: 15px !important; }
         .pdf-mode .actuantes-box div { font-size: 9px !important; }
         .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 11px !important; padding-top: 4px !important; margin-top: 2px !important; }
-        
         .pdf-mode .no-print { display: none !important; }
 
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
@@ -105,8 +99,27 @@
     <div id="login-screen">
         <h2 id="login-title">Identificación Operativa</h2>
         <p id="login-desc" style="font-size: 13px; color: #8e8e93; margin-bottom: 15px;">Introduce tu PIN de acceso.</p>
+        
         <input type="password" id="pinInput" placeholder="Introduce PIN" inputmode="numeric" pattern="[0-9]*">
-        <button onclick="acceder()">Entrar</button>
+        
+        <!-- CAMPOS NUEVOS PARA CREAR PUK (Ocultos por defecto) -->
+        <div id="setup-fields" class="hidden">
+            <input type="password" id="pukInput" placeholder="Crea un PUK (Nº de placa o palabra)">
+            <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
+        </div>
+
+        <!-- CAMPOS PARA RECUPERAR PIN -->
+        <div id="recovery-fields" class="hidden">
+            <input type="password" id="pukRecoveryInput" placeholder="Introduce tu código PUK">
+            <button onclick="recuperarPin()" style="background-color: #5e5ce6; color: #fff;">Validar PUK</button>
+            <button class="secondary" onclick="volverLogin()">Cancelar</button>
+        </div>
+
+        <div id="login-buttons">
+            <button onclick="acceder()">Entrar</button>
+            <button id="btn-olvido" class="secondary" onclick="mostrarRecuperacion()" style="margin-top: 15px; background-color: transparent; border: 1px solid #2c2c2e; font-size: 14px;">Olvidé mi PIN</button>
+        </div>
+        
         <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
     </div>
 
@@ -176,7 +189,7 @@
                 <div class="form-group" style="flex: 1;"><label class="form-label">🎨 COLOR</label><input type="text" id="reg-veh-color" placeholder="Ej: Blanco"></div>
             </div>
             <div class="input-row">
-                <div class="form-group" style="flex: 1;"><label class="form-label">🏷️ MARCA</label><input type="text" id="reg-veh-marca" placeholder="Ej: Seat"></div>
+                <div class="form-group" style="flex: 1;"><label class="form-label">🏷️️ MARCA</label><input type="text" id="reg-veh-marca" placeholder="Ej: Seat"></div>
                 <div class="form-group" style="flex: 1;"><label class="form-label">🚘 MODELO</label><input type="text" id="reg-veh-modelo" placeholder="Ej: León"></div>
             </div>
             <div class="form-group"><label class="form-label">🔧 BASTIDOR (VIN)</label><input type="text" id="reg-veh-vin" placeholder="17 CARACTERES" style="text-transform: uppercase;"></div>
@@ -262,7 +275,6 @@
         <button id="btn-guardar-aviso" onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
-    <!-- BUSCADOR E HISTORIAL DE AVISOS Y NOTAS -->
     <div id="search-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2>Buscador e Historial</h2>
@@ -293,12 +305,14 @@
     </div>
 
     <script>
-        // --- CONTROL DE INICIO Y PIN ---
+        // --- CONTROL DE INICIO, PIN Y RECUPERACIÓN (PUK) ---
         document.addEventListener('DOMContentLoaded', () => {
             if (!localStorage.getItem('pin_policial')) {
                 document.getElementById('login-title').innerText = "Bienvenido/a";
-                document.getElementById('login-desc').innerText = "Crea un PIN de 4 dígitos para proteger tu Cuaderno en este dispositivo.";
-                document.getElementById('pinInput').placeholder = "Nuevo PIN";
+                document.getElementById('login-desc').innerText = "Crea un PIN y un código PUK de seguridad para proteger este dispositivo.";
+                document.getElementById('pinInput').placeholder = "Nuevo PIN (Ej: 1234)";
+                document.getElementById('setup-fields').classList.remove('hidden');
+                document.getElementById('btn-olvido').classList.add('hidden');
             }
         });
 
@@ -313,95 +327,57 @@
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
 
-        // --- FUNCIONES DE CORREO PLANO ---
-        function enviarCorreoAviso(id) {
-            const reg = db.find(r => r.id === id);
-            if(!reg) return;
-            const subject = encodeURIComponent(`Informe de Servicio INT-${reg.id}`);
-            let body = `INFORME DE SERVICIO - INT-${reg.id}\n\nFECHA Y HORA: ${formateaFecha(reg.fechaISO)}\nMOTIVO: ${reg.motivo}\nLUGAR: ${reg.lugar || '-'}\n\nREQUIRENTE:\nTlf: ${reg.telefono || '-'}\nNombre: ${reg.comunicante || '-'}\n\n`;
-            if (reg.implicados && reg.implicados.length > 0) {
-                body += `IMPLICADOS:\n`;
-                reg.implicados.forEach(imp => { body += `- ${imp.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${imp.dato} (${imp.nota})\n`; });
-                body += `\n`;
-            }
-            body += `OBSERVACIONES:\n${reg.observaciones || '-'}\n\nAGENTES ACTUANTES: ${reg.actuantes || '-'}`;
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-        }
-
-        function enviarCorreoRegistro(id, tipo) {
-            let subject = "", body = "";
-            if (tipo === 'personas') {
-                const per = dbPersonas.find(p => p.id === id);
-                subject = encodeURIComponent(`Ficha de Persona - ${per.nombre || per.dni}`);
-                body += `FICHA DE IDENTIFICACIÓN PERSONAL\n\nNOMBRE: ${per.nombre || '-'}\nDNI: ${per.dni || '-'}\nMOTIVO: ${per.motivo || '-'}\n`;
-                body += `FECHA NAC: ${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}\nTLF: ${per.tlf || '-'}\n`;
-                body += `DOMICILIO: ${per.domicilio || '-'}\nVEHÍCULO: ${per.vehDesc || '-'} (Mat: ${per.vehMat || '-'})\n\nOBSERVACIONES:\n${per.obs || '-'}`;
-            } else {
-                const veh = dbVehiculos.find(v => v.id === id);
-                subject = encodeURIComponent(`Ficha de Vehículo - ${veh.mat}`);
-                body += `FICHA DE VEHÍCULO\n\nMATRÍCULA: ${veh.mat || '-'}\nMARCA/MODELO: ${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || '-'})\n`;
-                body += `VIN: ${veh.vin || '-'}\n\nTITULAR: ${veh.titular || '-'}\nDNI TITULAR: ${veh.titularDni || '-'}\n\nOBSERVACIONES:\n${veh.obs || '-'}`;
-            }
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-        }
-
-        function enviarCorreoNota(id) {
-            const nota = dbNotas.find(n => n.id === id);
-            const subject = encodeURIComponent(`Anotación Operativa - ${formateaFechaCorta(nota.fechaISO)}`);
-            let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-        }
-
-        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF ---
-        async function generarPDF(nombreArchivo) {
-            const elemento = document.getElementById('print-content');
-            const btnContainer = document.getElementById('details-action-bar');
-            
-            btnContainer.style.display = 'none';
-            elemento.classList.add('pdf-mode');
-            
-            const opt = {
-                margin:       [10, 10, 10, 10], 
-                filename:     nombreArchivo + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
-            };
-
-            try {
-                const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
-                
-                if (navigator.share && navigator.canShare) {
-                    const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-                    if (navigator.canShare({ files: [archivo] })) {
-                        await navigator.share({ files: [archivo], title: opt.filename });
-                    } else {
-                        html2pdf().set(opt).from(elemento).save();
-                    }
-                } else {
-                    html2pdf().set(opt).from(elemento).save();
-                }
-            } catch (error) {
-                console.error("Error al generar PDF:", error);
-                alert("Hubo un error al generar el PDF.");
-            } finally {
-                elemento.classList.remove('pdf-mode');
-                btnContainer.style.display = 'flex';
-            }
-        }
-
+        // --- SISTEMA DE ACCESO Y PUK ---
         function acceder() {
             const pin = document.getElementById('pinInput').value;
             let pinGuardado = localStorage.getItem('pin_policial');
+            
             if (!pinGuardado) {
-                if(pin.length < 4) { alert("Mínimo 4 dígitos."); return; }
+                if(pin.length < 4) { alert("El PIN debe tener al menos 4 dígitos."); return; }
+                const puk = document.getElementById('pukInput').value.trim();
+                if(!puk) { alert("Por seguridad, es obligatorio crear un código PUK."); return; }
+                
                 localStorage.setItem('pin_policial', pin);
+                localStorage.setItem('puk_policial', puk);
+                document.getElementById('pinInput').value = '';
                 mostrar('main-screen');
             } else if (pin === pinGuardado) {
+                document.getElementById('pinInput').value = '';
                 mostrar('main-screen');
             } else {
                 document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function mostrarRecuperacion() {
+            document.getElementById('login-title').innerText = "Recuperar Acceso";
+            document.getElementById('login-desc').innerText = "Introduce tu código PUK para resetear el PIN sin perder los datos.";
+            document.getElementById('pinInput').classList.add('hidden');
+            document.getElementById('login-buttons').classList.add('hidden');
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('recovery-fields').classList.remove('hidden');
+        }
+
+        function volverLogin() {
+            document.getElementById('login-title').innerText = "Identificación Operativa";
+            document.getElementById('login-desc').innerText = "Introduce tu PIN de acceso.";
+            document.getElementById('pinInput').classList.remove('hidden');
+            document.getElementById('pinInput').value = '';
+            document.getElementById('login-buttons').classList.remove('hidden');
+            document.getElementById('recovery-fields').classList.add('hidden');
+            document.getElementById('pukRecoveryInput').value = '';
+        }
+
+        function recuperarPin() {
+            const pukIntroducido = document.getElementById('pukRecoveryInput').value.trim();
+            const pukGuardado = localStorage.getItem('puk_policial');
+            
+            if(pukGuardado && pukIntroducido === pukGuardado) {
+                localStorage.removeItem('pin_policial');
+                alert("✅ PUK correcto. El PIN ha sido borrado.\n\nPor favor, crea un nuevo PIN de acceso.");
+                window.location.reload(); 
+            } else {
+                alert("❌ Código PUK incorrecto.");
             }
         }
 
@@ -410,6 +386,44 @@
             mostrar('login-screen');
         }
 
+        // --- SISTEMA DE FOTOS (BASE64) ---
+        function previsualizarFoto(event, previewId) {
+            const file = event.target.files[0];
+            const preview = document.getElementById(previewId);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    preview.setAttribute('data-base64', e.target.result);
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                preview.removeAttribute('data-base64');
+            }
+        }
+
+        function getBase64FromPreview(previewId) {
+            const preview = document.getElementById(previewId);
+            return preview.getAttribute('data-base64') || null;
+        }
+
+        function setBase64ToPreview(previewId, base64String) {
+            const preview = document.getElementById(previewId);
+            if(base64String) {
+                preview.src = base64String;
+                preview.style.display = 'block';
+                preview.setAttribute('data-base64', base64String);
+            } else {
+                preview.src = "";
+                preview.style.display = 'none';
+                preview.removeAttribute('data-base64');
+            }
+        }
+
+        // --- RESTO DE FUNCIONES DEL SISTEMA ---
         function mostrar(pantalla) {
             document.querySelectorAll('body > div').forEach(div => {
                 if(div.id !== 'print-content') div.classList.add('hidden');
@@ -453,42 +467,85 @@
             }
         }
 
-        function previsualizarFoto(event, previewId) {
-            const file = event.target.files[0];
-            const preview = document.getElementById(previewId);
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    preview.setAttribute('data-base64', e.target.result);
+        // --- ENVIAR CORREOS ---
+        function enviarCorreoAviso(id) {
+            const reg = db.find(r => r.id === id);
+            if(!reg) return;
+            const subject = encodeURIComponent(`Informe de Servicio INT-${reg.id}`);
+            let body = `INFORME DE SERVICIO - INT-${reg.id}\n\nFECHA Y HORA: ${formateaFecha(reg.fechaISO)}\nMOTIVO: ${reg.motivo}\nLUGAR: ${reg.lugar || '-'}\n\nREQUIRENTE:\nTlf: ${reg.telefono || '-'}\nNombre: ${reg.comunicante || '-'}\n\n`;
+            if (reg.implicados && reg.implicados.length > 0) {
+                body += `IMPLICADOS:\n`;
+                reg.implicados.forEach(imp => { body += `- ${imp.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${imp.dato} (${imp.nota})\n`; });
+                body += `\n`;
+            }
+            body += `OBSERVACIONES:\n${reg.observaciones || '-'}\n\nAGENTES ACTUANTES: ${reg.actuantes || '-'}`;
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        function enviarCorreoRegistro(id, tipo) {
+            let subject = "", body = "";
+            if (tipo === 'personas') {
+                const per = dbPersonas.find(p => p.id === id);
+                subject = encodeURIComponent(`Ficha de Persona - ${per.nombre || per.dni}`);
+                body += `FICHA DE IDENTIFICACIÓN PERSONAL\n\nNOMBRE: ${per.nombre || '-'}\nDNI: ${per.dni || '-'}\nMOTIVO: ${per.motivo || '-'}\n`;
+                body += `FECHA NAC: ${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}\nTLF: ${per.tlf || '-'}\n`;
+                body += `DOMICILIO: ${per.domicilio || '-'}\nVEHÍCULO: ${per.vehDesc || '-'} (Mat: ${per.vehMat || '-'})\n\nOBSERVACIONES:\n${per.obs || '-'}`;
+            } else {
+                const veh = dbVehiculos.find(v => v.id === id);
+                subject = encodeURIComponent(`Ficha de Vehículo - ${veh.mat}`);
+                body += `FICHA DE VEHÍCULO\n\nMATRÍCULA: ${veh.mat || '-'}\nMARCA/MODELO: ${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || '-'})\n`;
+                body += `VIN: ${veh.vin || '-'}\n\nTITULAR: ${veh.titular || '-'}\nDNI TITULAR: ${veh.titularDni || '-'}\n\nOBSERVACIONES:\n${veh.obs || '-'}`;
+            }
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        function enviarCorreoNota(id) {
+            const nota = dbNotas.find(n => n.id === id);
+            const subject = encodeURIComponent(`Anotación Operativa - ${formateaFechaCorta(nota.fechaISO)}`);
+            let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        // --- GENERADOR PDF ---
+        async function generarPDF(nombreArchivo) {
+            const elemento = document.getElementById('print-content');
+            const btnContainer = document.getElementById('details-action-bar');
+            
+            btnContainer.style.display = 'none';
+            elemento.classList.add('pdf-mode');
+            
+            const opt = {
+                margin:       [10, 10, 10, 10], 
+                filename:     nombreArchivo + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
+            };
+
+            try {
+                const pdfBlob = await html2pdf().set(opt).from(elemento).output('blob');
+                
+                if (navigator.share && navigator.canShare) {
+                    const archivo = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+                    if (navigator.canShare({ files: [archivo] })) {
+                        await navigator.share({ files: [archivo], title: opt.filename });
+                    } else {
+                        html2pdf().set(opt).from(elemento).save();
+                    }
+                } else {
+                    html2pdf().set(opt).from(elemento).save();
                 }
-                reader.readAsDataURL(file);
-            } else {
-                preview.src = "";
-                preview.style.display = 'none';
-                preview.removeAttribute('data-base64');
+            } catch (error) {
+                console.error("Error al generar PDF:", error);
+                alert("Hubo un error al generar el PDF.");
+            } finally {
+                elemento.classList.remove('pdf-mode');
+                btnContainer.style.display = 'flex';
             }
         }
 
-        function getBase64FromPreview(previewId) {
-            const preview = document.getElementById(previewId);
-            return preview.getAttribute('data-base64') || null;
-        }
-
-        function setBase64ToPreview(previewId, base64String) {
-            const preview = document.getElementById(previewId);
-            if(base64String) {
-                preview.src = base64String;
-                preview.style.display = 'block';
-                preview.setAttribute('data-base64', base64String);
-            } else {
-                preview.src = "";
-                preview.style.display = 'none';
-                preview.removeAttribute('data-base64');
-            }
-        }
-
+        // --- REGISTROS ---
         function cambiarTabRegistros(tab) {
             tabRegistroActual = tab;
             document.getElementById('tab-personas').classList.remove('active');
@@ -632,7 +689,7 @@
                     (p.dni && p.dni.includes(termino)) || (p.vehMat && p.vehMat.includes(termino))
                 );
                 filtrados.reverse().forEach(p => {
-                    if (!termino && mostrados >= 30) return; // Limitar historial a 30 por rendimiento
+                    if (!termino && mostrados >= 30) return;
                     hayResultados = true;
                     mostrados++;
                     divLista.innerHTML += `
@@ -649,7 +706,7 @@
                     (v.marca && v.marca.toUpperCase().includes(termino)) || (v.titularDni && v.titularDni.includes(termino))
                 );
                 filtrados.reverse().forEach(v => {
-                    if (!termino && mostrados >= 30) return; // Limitar historial a 30 por rendimiento
+                    if (!termino && mostrados >= 30) return;
                     hayResultados = true;
                     mostrados++;
                     divLista.innerHTML += `
@@ -670,7 +727,7 @@
                 
                 document.getElementById('details-action-bar').innerHTML = `
                     <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
-                    <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️️ Editar</button>
                     <button onclick="enviarCorreoRegistro(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px;">📧 Correo</button>
                     <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF / Compartir</button>
                 `;
@@ -752,6 +809,7 @@
             }
         }
 
+        // --- NOTAS Y AVISOS ---
         function guardarNota() {
             const texto = document.getElementById('nuevaNota').value.trim();
             const actuante = document.getElementById('nuevaNotaActuante').value.trim();
@@ -806,7 +864,10 @@
                 div.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No hay notas guardadas.</p>';
                 return;
             }
+            let mostrados = 0;
             [...dbNotas].reverse().forEach(nota => {
+                if (mostrados >= 20) return; // Límite historial
+                mostrados++;
                 const fechaF = formateaFecha(nota.fechaISO);
                 div.innerHTML += `
                     <div class="card" style="border-left-color: #30d158;">
@@ -991,9 +1052,9 @@
             let contInt = 0, contNot = 0;
 
             if (!termino) {
-                // MODO HISTORIAL POR DEFECTO (SIN BÚSQUEDA)
+                // MODO HISTORIAL (ÚLTIMOS 20)
                 for (let i = db.length - 1; i >= 0; i--) {
-                    if (contInt >= 20) break; // Limitar a los 20 últimos para no saturar
+                    if (contInt >= 20) break;
                     const reg = db[i];
                     const fechaFormateada = formateaFecha(reg.fechaISO);
                     const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto(${reg.id})" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
@@ -1008,7 +1069,7 @@
                 }
 
                 for (let i = dbNotas.length - 1; i >= 0; i--) {
-                    if (contNot >= 20) break; // Limitar a las 20 últimas
+                    if (contNot >= 20) break;
                     const nota = dbNotas[i];
                     const fechaFormateada = formateaFecha(nota.fechaISO);
                     htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
@@ -1021,8 +1082,7 @@
                 if(htmlInt) divInt.innerHTML = `<div class="section-title">ÚLTIMOS AVISOS (HISTORIAL)</div>` + htmlInt;
                 if(htmlNot) divNot.innerHTML = `<div class="section-title">ÚLTIMAS NOTAS (HISTORIAL)</div>` + htmlNot;
                 if(!htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px; text-align: center;">El historial está vacío.</p>';
-                
-                return; // Salir para no procesar como búsqueda
+                return;
             }
 
             // MODO BÚSQUEDA GENERAL
