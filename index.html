@@ -65,23 +65,32 @@
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
-        /* MODO PDF DE ALTA COMPACTACIÓN */
+        /* ==================================================
+           MODO PDF DE ALTA COMPACTACIÓN 
+           ================================================== */
         .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
+        
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
+        
         .pdf-mode .pdf-header { border-bottom: 1px solid #000 !important; padding-bottom: 6px !important; margin-bottom: 8px !important; }
         .pdf-mode .pdf-header h2 { font-size: 14px !important; margin-bottom: 2px !important; }
         .pdf-mode .pdf-header-right { color: #000 !important; font-size: 12px !important; }
+        
         .pdf-mode .pdf-header img { width: 100px !important; height: auto !important; max-height: 60px !important; margin-right: 15px !important; object-fit: contain !important; }
+        
         .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 6px !important; margin-bottom: 4px !important; font-size: 10px !important; }
         .pdf-mode .implicado-box div { font-size: 10px !important; }
         .pdf-mode .implicado-extras { color: #333 !important; font-size: 9px !important; margin-top: 2px !important; }
+        
         .pdf-mode .actuantes-box { margin-top: 15px !important; }
         .pdf-mode .actuantes-box div { font-size: 9px !important; }
         .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 11px !important; padding-top: 4px !important; margin-top: 2px !important; }
+        
         .pdf-mode .no-print { display: none !important; }
+
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
@@ -111,7 +120,7 @@
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
-    <!-- MÓDULO REGISTROS -->
+    <!-- MÓDULO REGISTROS (Personas y Vehículos) -->
     <div id="records-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="records-title" style="display: flex; align-items: center; gap: 8px;"><span>🗂️</span> <span id="records-header-text">PERSONAS</span></h2>
@@ -253,10 +262,13 @@
         <button id="btn-guardar-aviso" onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
+    <!-- BUSCADOR E HISTORIAL DE AVISOS Y NOTAS -->
     <div id="search-screen" class="hidden">
-        <h2>Buscador Operativo</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>Buscador e Historial</h2>
+            <button class="secondary" onclick="mostrar('main-screen')" style="width: auto; padding: 5px 10px; margin: 0; border-radius: 15px;">X</button>
+        </div>
         <input type="text" id="busqueda" placeholder="Buscar DNI, Matrícula, Motivo o Notas..." onkeyup="ejecutarBusqueda()" style="text-transform: uppercase;">
-        <button class="secondary" onclick="mostrar('main-screen')">Volver al Menú</button>
         
         <div id="resultados-vehiculos"></div>
         <div id="resultados-personas"></div>
@@ -301,7 +313,46 @@
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
 
-        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF Y CORREO DIRECTO ---
+        // --- FUNCIONES DE CORREO PLANO ---
+        function enviarCorreoAviso(id) {
+            const reg = db.find(r => r.id === id);
+            if(!reg) return;
+            const subject = encodeURIComponent(`Informe de Servicio INT-${reg.id}`);
+            let body = `INFORME DE SERVICIO - INT-${reg.id}\n\nFECHA Y HORA: ${formateaFecha(reg.fechaISO)}\nMOTIVO: ${reg.motivo}\nLUGAR: ${reg.lugar || '-'}\n\nREQUIRENTE:\nTlf: ${reg.telefono || '-'}\nNombre: ${reg.comunicante || '-'}\n\n`;
+            if (reg.implicados && reg.implicados.length > 0) {
+                body += `IMPLICADOS:\n`;
+                reg.implicados.forEach(imp => { body += `- ${imp.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${imp.dato} (${imp.nota})\n`; });
+                body += `\n`;
+            }
+            body += `OBSERVACIONES:\n${reg.observaciones || '-'}\n\nAGENTES ACTUANTES: ${reg.actuantes || '-'}`;
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        function enviarCorreoRegistro(id, tipo) {
+            let subject = "", body = "";
+            if (tipo === 'personas') {
+                const per = dbPersonas.find(p => p.id === id);
+                subject = encodeURIComponent(`Ficha de Persona - ${per.nombre || per.dni}`);
+                body += `FICHA DE IDENTIFICACIÓN PERSONAL\n\nNOMBRE: ${per.nombre || '-'}\nDNI: ${per.dni || '-'}\nMOTIVO: ${per.motivo || '-'}\n`;
+                body += `FECHA NAC: ${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}\nTLF: ${per.tlf || '-'}\n`;
+                body += `DOMICILIO: ${per.domicilio || '-'}\nVEHÍCULO: ${per.vehDesc || '-'} (Mat: ${per.vehMat || '-'})\n\nOBSERVACIONES:\n${per.obs || '-'}`;
+            } else {
+                const veh = dbVehiculos.find(v => v.id === id);
+                subject = encodeURIComponent(`Ficha de Vehículo - ${veh.mat}`);
+                body += `FICHA DE VEHÍCULO\n\nMATRÍCULA: ${veh.mat || '-'}\nMARCA/MODELO: ${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || '-'})\n`;
+                body += `VIN: ${veh.vin || '-'}\n\nTITULAR: ${veh.titular || '-'}\nDNI TITULAR: ${veh.titularDni || '-'}\n\nOBSERVACIONES:\n${veh.obs || '-'}`;
+            }
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        function enviarCorreoNota(id) {
+            const nota = dbNotas.find(n => n.id === id);
+            const subject = encodeURIComponent(`Anotación Operativa - ${formateaFechaCorta(nota.fechaISO)}`);
+            let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
+            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+        }
+
+        // --- SISTEMA AVANZADO DE GENERACIÓN DE PDF ---
         async function generarPDF(nombreArchivo) {
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
@@ -338,52 +389,6 @@
                 elemento.classList.remove('pdf-mode');
                 btnContainer.style.display = 'flex';
             }
-        }
-
-        // FUNCIONES DE ENVÍO DE CORREO RÁPIDO (TEXTO PLANO)
-        function enviarCorreoAviso(id) {
-            const reg = db.find(r => r.id === id);
-            if(!reg) return;
-            const subject = encodeURIComponent(`Informe de Servicio INT-${reg.id}`);
-            let body = `INFORME DE SERVICIO - INT-${reg.id}\n\n`;
-            body += `FECHA Y HORA: ${formateaFecha(reg.fechaISO)}\n`;
-            body += `MOTIVO: ${reg.motivo}\n`;
-            body += `LUGAR: ${reg.lugar || '-'}\n\n`;
-            body += `REQUIRENTE:\nTlf: ${reg.telefono || '-'}\nNombre: ${reg.comunicante || '-'}\n\n`;
-            if (reg.implicados && reg.implicados.length > 0) {
-                body += `IMPLICADOS:\n`;
-                reg.implicados.forEach(imp => { body += `- ${imp.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${imp.dato} (${imp.nota})\n`; });
-                body += `\n`;
-            }
-            body += `OBSERVACIONES:\n${reg.observaciones || '-'}\n\n`;
-            body += `AGENTES ACTUANTES: ${reg.actuantes || '-'}`;
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-        }
-
-        function enviarCorreoRegistro(id, tipo) {
-            let subject = "", body = "";
-            if (tipo === 'personas') {
-                const per = dbPersonas.find(p => p.id === id);
-                subject = encodeURIComponent(`Ficha de Persona - ${per.nombre || per.dni}`);
-                body += `FICHA DE IDENTIFICACIÓN PERSONAL\n\nNOMBRE: ${per.nombre || '-'}\nDNI: ${per.dni || '-'}\nMOTIVO: ${per.motivo || '-'}\n`;
-                body += `FECHA NAC: ${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}\nTLF: ${per.tlf || '-'}\n`;
-                body += `DOMICILIO: ${per.domicilio || '-'}\nVEHÍCULO: ${per.vehDesc || '-'} (Mat: ${per.vehMat || '-'})\n\n`;
-                body += `OBSERVACIONES:\n${per.obs || '-'}`;
-            } else {
-                const veh = dbVehiculos.find(v => v.id === id);
-                subject = encodeURIComponent(`Ficha de Vehículo - ${veh.mat}`);
-                body += `FICHA DE VEHÍCULO\n\nMATRÍCULA: ${veh.mat || '-'}\nMARCA/MODELO: ${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || '-'})\n`;
-                body += `VIN: ${veh.vin || '-'}\n\nTITULAR: ${veh.titular || '-'}\nDNI TITULAR: ${veh.titularDni || '-'}\n\n`;
-                body += `OBSERVACIONES:\n${veh.obs || '-'}`;
-            }
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
-        }
-
-        function enviarCorreoNota(id) {
-            const nota = dbNotas.find(n => n.id === id);
-            const subject = encodeURIComponent(`Anotación Operativa - ${formateaFechaCorta(nota.fechaISO)}`);
-            let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
-            window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
         }
 
         function acceder() {
@@ -619,6 +624,7 @@
             const divLista = document.getElementById('lista-registros');
             divLista.innerHTML = '';
             let hayResultados = false;
+            let mostrados = 0;
 
             if(tabRegistroActual === 'personas') {
                 const filtrados = dbPersonas.filter(p => 
@@ -626,7 +632,9 @@
                     (p.dni && p.dni.includes(termino)) || (p.vehMat && p.vehMat.includes(termino))
                 );
                 filtrados.reverse().forEach(p => {
+                    if (!termino && mostrados >= 30) return; // Limitar historial a 30 por rendimiento
                     hayResultados = true;
+                    mostrados++;
                     divLista.innerHTML += `
                         <div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto(${p.id}, 'personas')">
                             <div class="card-title">👤 ${p.nombre || 'Sin nombre'}</div>
@@ -641,7 +649,9 @@
                     (v.marca && v.marca.toUpperCase().includes(termino)) || (v.titularDni && v.titularDni.includes(termino))
                 );
                 filtrados.reverse().forEach(v => {
+                    if (!termino && mostrados >= 30) return; // Limitar historial a 30 por rendimiento
                     hayResultados = true;
+                    mostrados++;
                     divLista.innerHTML += `
                         <div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto(${v.id}, 'vehiculos')">
                             <div class="card-title">🚗 ${v.mat || 'Sin matrícula'}</div>
@@ -834,7 +844,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="detalle-bloque" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
+                <div class="detalle-bloque page-protect" style="font-size: 16px; white-space: pre-wrap; line-height: 1.5;">${nota.texto}</div>
                 ${nota.actuante ? `
                 <div class="actuantes-box page-protect">
                     <div style="font-size: 12px; color: #8e8e93; font-weight: bold; margin-bottom: 5px;">AGENTE ACTUANTE</div>
@@ -976,10 +986,46 @@
             const divNot = document.getElementById('resultados-notas');
             
             divVeh.innerHTML = ''; divPer.innerHTML = ''; divInt.innerHTML = ''; divNot.innerHTML = '';
-            if(!termino) return;
 
             let htmlVeh = ''; let htmlPer = ''; let htmlInt = ''; let htmlNot = '';
+            let contInt = 0, contNot = 0;
 
+            if (!termino) {
+                // MODO HISTORIAL POR DEFECTO (SIN BÚSQUEDA)
+                for (let i = db.length - 1; i >= 0; i--) {
+                    if (contInt >= 20) break; // Limitar a los 20 últimos para no saturar
+                    const reg = db[i];
+                    const fechaFormateada = formateaFecha(reg.fechaISO);
+                    const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto(${reg.id})" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
+                    
+                    htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
+                            <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
+                            <div class="card-title">📞 Aviso: ${reg.motivo}</div>
+                            <div class="card-detail"><b>Lugar:</b> ${reg.lugar || 'No consta'}</div>
+                            ${botonDetalle}
+                        </div>`;
+                    contInt++;
+                }
+
+                for (let i = dbNotas.length - 1; i >= 0; i--) {
+                    if (contNot >= 20) break; // Limitar a las 20 últimas
+                    const nota = dbNotas[i];
+                    const fechaFormateada = formateaFecha(nota.fechaISO);
+                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
+                        <div class="card-header"><span>🕒 ${fechaFormateada}</span><span>📄 Ver</span></div>
+                        <div style="white-space: pre-wrap; font-size: 14px; color: #d1d1d6;">${nota.texto}</div>
+                    </div>`;
+                    contNot++;
+                }
+
+                if(htmlInt) divInt.innerHTML = `<div class="section-title">ÚLTIMOS AVISOS (HISTORIAL)</div>` + htmlInt;
+                if(htmlNot) divNot.innerHTML = `<div class="section-title">ÚLTIMAS NOTAS (HISTORIAL)</div>` + htmlNot;
+                if(!htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px; text-align: center;">El historial está vacío.</p>';
+                
+                return; // Salir para no procesar como búsqueda
+            }
+
+            // MODO BÚSQUEDA GENERAL
             for (let i = db.length - 1; i >= 0; i--) {
                 const reg = db[i];
                 let intervencionMostrada = false;
@@ -1039,7 +1085,7 @@
             if(htmlPer) divPer.innerHTML = `<div class="section-title">👤 PERSONAS ENCONTRADAS</div>` + htmlPer;
             if(htmlInt) divInt.innerHTML = `<div class="section-title">📞 AVISOS / MOTIVOS</div>` + htmlInt;
             if(htmlNot) divNot.innerHTML = `<div class="section-title">📝 NOTAS LIBRES ENCONTRADAS</div>` + htmlNot;
-            if(!htmlVeh && !htmlPer && !htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px;">No se han encontrado registros ni notas.</p>';
+            if(!htmlVeh && !htmlPer && !htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px; text-align: center;">No se han encontrado registros ni notas.</p>';
         }
 
         function verAvisoCompleto(idIntervencion) {
