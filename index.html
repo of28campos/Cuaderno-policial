@@ -85,7 +85,7 @@
 
         @media print {
             body { background-color: #fff; color: #000; padding: 0; }
-            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
+            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
             #details-screen { display: block !important; }
         }
     </style>
@@ -125,7 +125,7 @@
         <button onclick="mostrar('records-screen')" style="background-color: #5e5ce6; color: #fff;">🗂️ Registro de Identificaciones</button>
         <button onclick="mostrar('notes-screen')" style="background-color: #30d158; color: #000;">📝 Bloc de Notas</button>
         <button onclick="mostrar('search-screen')">🔍 Buscador e Historial</button>
-        <button onclick="mostrar('tools-screen')" class="secondary">🛠 Normativa y Enlaces</button>
+        <!-- BOTÓN NORMATIVA ELIMINADO -->
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
@@ -286,19 +286,8 @@
     </div>
 
     <div id="details-screen" class="hidden">
-        <div id="details-action-bar" class="no-print" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
+        <div id="details-action-bar" class="no-print" style="margin-bottom: 15px;"></div>
         <div id="print-content"></div>
-    </div>
-
-    <div id="tools-screen" class="hidden">
-        <h2>Normativa y Enlaces</h2>
-        <a href="https://www.boe.es/biblioteca_juridica/codigos/codigo.php?id=020_Codigo_de_Trafico_y_Seguridad_Vial" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">📖 BOE: Código de Tráfico</button>
-        </a>
-        <a href="https://www.ofesauto.es/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-            <button class="secondary" style="text-align: left; border-left: 4px solid #d4a373;">🌍 OFESAUTO (Matrículas)</button>
-        </a>
-        <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 30px;">Volver</button>
     </div>
 
     <script>
@@ -307,7 +296,7 @@
             const hasPin = localStorage.getItem('pin_policial');
             const hasPuk = localStorage.getItem('puk_policial');
             
-            // Si falta el PIN o el PUK (Usuarios nuevos o actualizaciones)
+            // Si falta el PIN o el PUK obliga a configurarlo inmediatamente
             if (!hasPin || !hasPuk) {
                 document.getElementById('login-title').innerText = "Seguridad Actualizada";
                 document.getElementById('login-desc').innerText = "Crea un PIN y un código PUK de seguridad para proteger este dispositivo.";
@@ -315,7 +304,7 @@
                 document.getElementById('setup-fields').classList.remove('hidden');
                 document.getElementById('btn-olvido').classList.add('hidden');
                 
-                // Forzar reseteo si falta uno de los dos para que configure ambos
+                // Forzar reseteo si falta uno de los dos
                 localStorage.removeItem('pin_policial');
                 localStorage.removeItem('puk_policial');
             }
@@ -503,7 +492,7 @@
                 alert("Hubo un error al generar el PDF.");
             } finally {
                 elemento.classList.remove('pdf-mode');
-                btnContainer.style.display = 'flex';
+                btnContainer.style.display = 'block';
             }
         }
 
@@ -729,15 +718,15 @@
                 if(!per) return;
                 
                 document.getElementById('details-action-bar').innerHTML = `
-                    <div style="display: flex; gap: 8px; width: 100%;">
-                        <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
-                        <button class="secondary" onclick="mostrarFormularioRegistro('${per.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
-                        <button onclick="borrarRegistroBase('${per.id}', 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <button class="secondary" onclick="mostrar('records-screen')" style="margin:0;">&larr; Volver</button>
+                        <button class="secondary" onclick="mostrarFormularioRegistro('${per.id}')" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                     </div>
-                    <div style="display: flex; gap: 8px; width: 100%;">
-                        <button onclick="enviarCorreoRegistro('${per.id}', 'personas')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
-                        <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="enviarCorreoRegistro('${per.id}', 'personas')" style="margin:0; background-color: #0a84ff; color: #fff;">📧 Correo</button>
+                        <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="margin:0; background-color: #30d158; color: #000;">🖨️ PDF</button>
                     </div>
+                    <button onclick="borrarRegistroBase('${per.id}', 'personas')" style="width: 100%; margin:0; background-color: #ff453a; color: #fff; padding: 14px;">🗑️ Borrar Persona</button>
                 `;
 
                 document.getElementById('print-content').innerHTML = `
@@ -773,15 +762,15 @@
                 if(!veh) return;
 
                 document.getElementById('details-action-bar').innerHTML = `
-                    <div style="display: flex; gap: 8px; width: 100%;">
-                        <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
-                        <button class="secondary" onclick="mostrarFormularioRegistro('${veh.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
-                        <button onclick="borrarRegistroBase('${veh.id}', 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <button class="secondary" onclick="mostrar('records-screen')" style="margin:0;">&larr; Volver</button>
+                        <button class="secondary" onclick="mostrarFormularioRegistro('${veh.id}')" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                     </div>
-                    <div style="display: flex; gap: 8px; width: 100%;">
-                        <button onclick="enviarCorreoRegistro('${veh.id}', 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
-                        <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️️ PDF</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <button onclick="enviarCorreoRegistro('${veh.id}', 'vehiculos')" style="margin:0; background-color: #0a84ff; color: #fff;">📧 Correo</button>
+                        <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="margin:0; background-color: #30d158; color: #000;">🖨️ PDF</button>
                     </div>
+                    <button onclick="borrarRegistroBase('${veh.id}', 'vehiculos')" style="width: 100%; margin:0; background-color: #ff453a; color: #fff; padding: 14px;">🗑️ Borrar Vehículo</button>
                 `;
 
                 document.getElementById('print-content').innerHTML = `
@@ -818,6 +807,7 @@
                     dbVehiculos = dbVehiculos.filter(v => String(v.id) !== String(id));
                     localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
                 }
+                alert("Registro borrado con éxito.");
                 mostrar('records-screen');
             }
         }
@@ -865,9 +855,10 @@
         }
 
         function borrarNota(id) {
-            if(confirm("¿Borrar esta nota permanentemente?")) {
+            if(confirm("¿Seguro que quieres borrar esta nota permanentemente?")) {
                 dbNotas = dbNotas.filter(n => String(n.id) !== String(id));
                 localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
+                alert("Nota borrada con éxito.");
                 mostrar('notes-screen');
             }
         }
@@ -891,7 +882,6 @@
                             <div style="font-size: 16px;">
                                 <span style="cursor: pointer; padding: 0 8px;" onclick="imprimirNota('${nota.id}')" title="Imprimir PDF">🖨️</span>
                                 <span style="cursor: pointer; padding: 0 8px;" onclick="editarNota('${nota.id}')" title="Editar">✏️</span>
-                                <span style="color: #ff453a; font-weight: bold; cursor: pointer; padding: 0 8px;" onclick="borrarNota('${nota.id}')" title="Borrar">X</span>
                             </div>
                         </div>
                         <div style="white-space: pre-wrap; font-size: 15px; color: #fff;">${nota.texto}</div>
@@ -904,15 +894,15 @@
             if(!nota) return;
 
             document.getElementById('details-action-bar').innerHTML = `
-                <div style="display: flex; gap: 8px; width: 100%;">
-                    <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
-                    <button class="secondary" onclick="editarNota('${nota.id}'); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
-                    <button onclick="borrarNota('${nota.id}')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <button class="secondary" onclick="mostrar('notes-screen')" style="margin:0;">&larr; Volver</button>
+                    <button class="secondary" onclick="editarNota('${nota.id}'); mostrar('notes-screen');" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                 </div>
-                <div style="display: flex; gap: 8px; width: 100%;">
-                    <button onclick="enviarCorreoNota('${nota.id}')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
-                    <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\//g,'-')}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="enviarCorreoNota('${nota.id}')" style="margin:0; background-color: #0a84ff; color: #fff;">📧 Correo</button>
+                    <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\//g,'-')}')" style="margin:0; background-color: #30d158; color: #000;">🖨️ PDF</button>
                 </div>
+                <button onclick="borrarNota('${nota.id}')" style="width: 100%; margin:0; background-color: #ff453a; color: #fff; padding: 14px;">🗑️ Borrar Nota</button>
             `;
 
             document.getElementById('print-content').innerHTML = `
@@ -978,11 +968,12 @@
             
             mostrar('form-screen');
         }
-        
+
         function borrarAviso(id) {
-            if(confirm("¿Seguro que quieres borrar esta intervención permanentemente?")) {
+            if(confirm("¿Seguro que quieres borrar este informe permanentemente?")) {
                 db = db.filter(r => String(r.id) !== String(id));
                 localStorage.setItem('db_policial_v3', JSON.stringify(db));
+                alert("Informe borrado con éxito.");
                 mostrar('search-screen');
             }
         }
@@ -1021,12 +1012,12 @@
                 }
                 div.innerHTML += `<div class="implicado-box" style="display: flex; justify-content: space-between;">
                     <div>${icono} <b>${imp.dato}</b> - ${imp.nota} <br><span class="implicado-extras" style="font-size:11px;">${extras}</span></div>
-                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center; cursor:pointer;" onclick="borrarImplicado(${index})">X</span>
+                    <span style="color: #ff453a; font-weight: bold; padding: 0 10px; font-size: 16px; align-self: center; cursor:pointer;" onclick="borrarImplicadoTemp(${index})">X</span>
                 </div>`;
             });
         }
 
-        function borrarImplicado(index) {
+        function borrarImplicadoTemp(index) {
             implicadosTemporales.splice(index, 1);
             actualizarListaImplicados();
         }
@@ -1070,9 +1061,6 @@
             }
         }
 
-        // ==========================================
-        // BUSCADOR GENERAL (Avisos, Notas y Registros)
-        // ==========================================
         function ejecutarBusqueda() {
             const termino = document.getElementById('busqueda').value.toUpperCase();
             const divVeh = document.getElementById('resultados-vehiculos');
@@ -1116,11 +1104,10 @@
                 if(htmlInt) divInt.innerHTML = `<div class="section-title">ÚLTIMOS AVISOS (HISTORIAL)</div>` + htmlInt;
                 if(htmlNot) divNot.innerHTML = `<div class="section-title">ÚLTIMAS NOTAS (HISTORIAL)</div>` + htmlNot;
                 if(!htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px; text-align: center;">El historial está vacío.</p>';
-                
                 return;
             }
 
-            // MODO BÚSQUEDA GENERAL (Busca en TODAS las bases de datos)
+            // BÚSQUEDA CRUZADA EN TODAS LAS BASES DE DATOS
             for (let i = dbPersonas.length - 1; i >= 0; i--) {
                 const p = dbPersonas[i];
                 if ((p.nombre && p.nombre.toUpperCase().includes(termino)) || 
@@ -1128,7 +1115,7 @@
                     (p.vehMat && p.vehMat.includes(termino)) ||
                     (p.motivo && p.motivo.toUpperCase().includes(termino))) {
                     htmlPer += `<div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto('${p.id}', 'personas')">
-                        <div class="card-header"><span style="color:#30d158; font-weight:bold;">🗂️️ FICHA REGISTRO</span><span>PERSONA</span></div>
+                        <div class="card-header"><span style="color:#30d158; font-weight:bold;">🗂️ FICHA REGISTRO</span><span>PERSONA</span></div>
                         <div class="card-title">👤 ${p.nombre || 'Sin nombre'}</div>
                         <div class="card-detail"><b>DNI:</b> ${p.dni || '-'}</div>
                         <div class="card-detail"><b>Motivo:</b> ${p.motivo || '-'}</div>
@@ -1217,16 +1204,17 @@
             const reg = db.find(r => String(r.id) === String(idIntervencion));
             if(!reg) return;
 
+            // BOTONERA MEJORADA PARA INTERVENCIONES
             document.getElementById('details-action-bar').innerHTML = `
-                <div style="display: flex; gap: 8px; width: 100%;">
-                    <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
-                    <button class="secondary" onclick="editarAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
-                    <button onclick="borrarAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <button class="secondary" onclick="mostrar('search-screen')" style="margin:0;">&larr; Volver</button>
+                    <button class="secondary" onclick="editarAviso('${reg.id}')" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                 </div>
-                <div style="display: flex; gap: 8px; width: 100%;">
-                    <button onclick="enviarCorreoAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
-                    <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <button onclick="enviarCorreoAviso('${reg.id}')" style="margin:0; background-color: #0a84ff; color: #fff;">📧 Correo</button>
+                    <button onclick="generarPDF('Informe_INT_${reg.id}')" style="margin:0; background-color: #30d158; color: #000;">🖨️ PDF</button>
                 </div>
+                <button onclick="borrarAviso('${reg.id}')" style="width: 100%; margin:0; background-color: #ff453a; color: #fff; padding: 14px;">🗑️ Borrar Aviso</button>
             `;
 
             let htmlImplicados = '';
