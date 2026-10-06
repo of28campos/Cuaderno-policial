@@ -10,6 +10,7 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
         h2 { margin-top: 0; color: #fff; font-size: 18px; }
+        
         input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
         input:focus, textarea:focus { outline: none; border-color: #d4a373; }
         input[type="date"] { color: #fff; }
@@ -36,7 +37,7 @@
         .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
         .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
 
-        /* REGLAS DE PROTECCIÓN CONTRA CORTES DE PÁGINA */
+        /* PROTECCIÓN CORTES PDF */
         .detalle-bloque { background-color: #1c1c1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2c2c2e; word-break: break-word; page-break-inside: avoid; break-inside: avoid; }
         .implicado-box { background-color: #2c2c2e; padding: 10px; border-radius: 6px; margin-bottom: 10px; page-break-inside: avoid; break-inside: avoid; }
         .actuantes-box { margin-top: 40px; text-align: right; page-break-inside: avoid; break-inside: avoid; }
@@ -63,9 +64,7 @@
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
-        /* ==================================================
-           MODO PDF DE ALTA COMPACTACIÓN 
-           ================================================== */
+        /* MODO PDF DE ALTA COMPACTACIÓN */
         .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
@@ -82,7 +81,6 @@
         .pdf-mode .actuantes-box div { font-size: 9px !important; }
         .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 11px !important; padding-top: 4px !important; margin-top: 2px !important; }
         .pdf-mode .no-print { display: none !important; }
-
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
@@ -102,7 +100,7 @@
         
         <!-- CAMPOS PARA CREAR PUK -->
         <div id="setup-fields" class="hidden">
-            <input type="password" id="pukInput" placeholder="Crea un PUK (Nº de placa o palabra)">
+            <input type="password" id="pukInput" placeholder="Crea un PUK (Nº placa o palabra)">
             <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
         </div>
 
@@ -288,7 +286,7 @@
     </div>
 
     <div id="details-screen" class="hidden">
-        <div id="details-action-bar" class="no-print" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;"></div>
+        <div id="details-action-bar" class="no-print" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
         <div id="print-content"></div>
     </div>
 
@@ -303,16 +301,13 @@
         <button class="secondary" onclick="mostrar('main-screen')" style="margin-top: 30px;">Volver</button>
     </div>
 
-    <!-- ==========================================
-         SCRIPT ÚNICO Y LIMPIO (SIN DUPLICADOS)
-         ========================================== -->
     <script>
-        // --- INICIALIZACIÓN, PIN Y PUK ---
-        document.addEventListener('DOMContentLoaded', () => {
+        // --- CONTROL DE INICIO, PIN Y RECUPERACIÓN (PUK) AUTOEJECUTABLE ---
+        (function initSecurity() {
             const hasPin = localStorage.getItem('pin_policial');
             const hasPuk = localStorage.getItem('puk_policial');
             
-            // Si falta algo de seguridad (o es usuario nuevo o viene de versión antigua)
+            // Si falta el PIN o el PUK (Usuarios nuevos o actualizaciones)
             if (!hasPin || !hasPuk) {
                 document.getElementById('login-title').innerText = "Seguridad Actualizada";
                 document.getElementById('login-desc').innerText = "Crea un PIN y un código PUK de seguridad para proteger este dispositivo.";
@@ -320,10 +315,11 @@
                 document.getElementById('setup-fields').classList.remove('hidden');
                 document.getElementById('btn-olvido').classList.add('hidden');
                 
-                // Forzamos reseteo del PIN si no había PUK para que configure ambos
+                // Forzar reseteo si falta uno de los dos para que configure ambos
                 localStorage.removeItem('pin_policial');
+                localStorage.removeItem('puk_policial');
             }
-        });
+        })();
 
         // --- BASES DE DATOS GLOBALES ---
         let db = JSON.parse(localStorage.getItem('db_policial_v3')) || [];
@@ -337,7 +333,7 @@
         let editandoRegistroId = null;
         let tabRegistroActual = 'personas';
 
-        // --- FUNCIONES DE ACCESO ---
+        // --- SISTEMA DE ACCESO Y PUK ---
         function acceder() {
             const pin = document.getElementById('pinInput').value;
             let pinGuardado = localStorage.getItem('pin_policial');
@@ -513,7 +509,7 @@
 
         // --- ENVIAR CORREOS PLANOS ---
         function enviarCorreoAviso(id) {
-            const reg = db.find(r => r.id === id);
+            const reg = db.find(r => String(r.id) === String(id));
             if(!reg) return;
             const subject = encodeURIComponent(`Informe de Servicio INT-${reg.id}`);
             let body = `INFORME DE SERVICIO - INT-${reg.id}\n\nFECHA Y HORA: ${formateaFecha(reg.fechaISO)}\nMOTIVO: ${reg.motivo}\nLUGAR: ${reg.lugar || '-'}\n\nREQUIRENTE:\nTlf: ${reg.telefono || '-'}\nNombre: ${reg.comunicante || '-'}\n\n`;
@@ -529,13 +525,13 @@
         function enviarCorreoRegistro(id, tipo) {
             let subject = "", body = "";
             if (tipo === 'personas') {
-                const per = dbPersonas.find(p => p.id === id);
+                const per = dbPersonas.find(p => String(p.id) === String(id));
                 subject = encodeURIComponent(`Ficha de Persona - ${per.nombre || per.dni}`);
                 body += `FICHA DE IDENTIFICACIÓN PERSONAL\n\nNOMBRE: ${per.nombre || '-'}\nDNI: ${per.dni || '-'}\nMOTIVO: ${per.motivo || '-'}\n`;
                 body += `FECHA NAC: ${formateaFechaCorta(per.fechaNac)} ${per.lugarNac ? '('+per.lugarNac+')' : ''}\nTLF: ${per.tlf || '-'}\n`;
                 body += `DOMICILIO: ${per.domicilio || '-'}\nVEHÍCULO: ${per.vehDesc || '-'} (Mat: ${per.vehMat || '-'})\n\nOBSERVACIONES:\n${per.obs || '-'}`;
             } else {
-                const veh = dbVehiculos.find(v => v.id === id);
+                const veh = dbVehiculos.find(v => String(v.id) === String(id));
                 subject = encodeURIComponent(`Ficha de Vehículo - ${veh.mat}`);
                 body += `FICHA DE VEHÍCULO\n\nMATRÍCULA: ${veh.mat || '-'}\nMARCA/MODELO: ${veh.marca || '-'} ${veh.modelo || '-'} (${veh.color || '-'})\n`;
                 body += `VIN: ${veh.vin || '-'}\n\nTITULAR: ${veh.titular || '-'}\nDNI TITULAR: ${veh.titularDni || '-'}\n\nOBSERVACIONES:\n${veh.obs || '-'}`;
@@ -544,7 +540,7 @@
         }
 
         function enviarCorreoNota(id) {
-            const nota = dbNotas.find(n => n.id === id);
+            const nota = dbNotas.find(n => String(n.id) === String(id));
             const subject = encodeURIComponent(`Anotación Operativa - ${formateaFechaCorta(nota.fechaISO)}`);
             let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
             window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
@@ -574,7 +570,7 @@
                 limpiarFormularioPersona();
                 if(idEditar) cargarDatosPersonaForm(idEditar);
             } else {
-                document.getElementById('record-form-title').innerText = idEditar ? "✏️️ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
+                document.getElementById('record-form-title').innerText = idEditar ? "✏ EDITAR VEHÍCULO" : "NUEVO VEHÍCULO";
                 document.getElementById('form-fields-vehiculo').classList.remove('hidden');
                 limpiarFormularioVehiculo();
                 if(idEditar) cargarDatosVehiculoForm(idEditar);
@@ -598,7 +594,7 @@
         }
 
         function cargarDatosPersonaForm(id) {
-            const per = dbPersonas.find(p => p.id === id);
+            const per = dbPersonas.find(p => String(p.id) === String(id));
             if(!per) return;
             document.getElementById('reg-per-nombre').value = per.nombre || '';
             document.getElementById('reg-per-dni').value = per.dni || '';
@@ -614,7 +610,7 @@
         }
 
         function cargarDatosVehiculoForm(id) {
-            const veh = dbVehiculos.find(v => v.id === id);
+            const veh = dbVehiculos.find(v => String(v.id) === String(id));
             if(!veh) return;
             document.getElementById('reg-veh-mat').value = veh.mat || '';
             document.getElementById('reg-veh-color').value = veh.color || '';
@@ -647,7 +643,7 @@
                 };
 
                 if(editandoRegistroId) {
-                    const idx = dbPersonas.findIndex(p => p.id === editandoRegistroId);
+                    const idx = dbPersonas.findIndex(p => String(p.id) === String(editandoRegistroId));
                     if(idx !== -1) dbPersonas[idx] = { ...dbPersonas[idx], ...datos };
                 } else {
                     datos.id = Date.now();
@@ -671,7 +667,7 @@
                 };
 
                 if(editandoRegistroId) {
-                    const idx = dbVehiculos.findIndex(v => v.id === editandoRegistroId);
+                    const idx = dbVehiculos.findIndex(v => String(v.id) === String(editandoRegistroId));
                     if(idx !== -1) dbVehiculos[idx] = { ...dbVehiculos[idx], ...datos };
                 } else {
                     datos.id = Date.now();
@@ -700,7 +696,7 @@
                     hayResultados = true;
                     mostrados++;
                     divLista.innerHTML += `
-                        <div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto(${p.id}, 'personas')">
+                        <div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto('${p.id}', 'personas')">
                             <div class="card-title">👤 ${p.nombre || 'Sin nombre'}</div>
                             <div class="card-detail"><b>DNI:</b> ${p.dni || '-'}</div>
                             ${p.vehMat ? `<div class="card-detail"><b>Vehículo:</b> ${p.vehMat}</div>` : ''}
@@ -717,7 +713,7 @@
                     hayResultados = true;
                     mostrados++;
                     divLista.innerHTML += `
-                        <div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto(${v.id}, 'vehiculos')">
+                        <div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto('${v.id}', 'vehiculos')">
                             <div class="card-title">🚗 ${v.mat || 'Sin matrícula'}</div>
                             <div class="card-detail"><b>Vehículo:</b> ${v.marca} ${v.modelo}</div>
                             ${v.titular ? `<div class="card-detail"><b>Titular:</b> ${v.titular}</div>` : ''}
@@ -729,15 +725,19 @@
 
         function verRegistroCompleto(id, tipo) {
             if (tipo === 'personas') {
-                const per = dbPersonas.find(p => p.id === id);
+                const per = dbPersonas.find(p => String(p.id) === String(id));
                 if(!per) return;
                 
                 document.getElementById('details-action-bar').innerHTML = `
-                    <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
-                    <button class="secondary" onclick="mostrarFormularioRegistro(${per.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                    <button onclick="borrarRegistroBase(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
-                    <button onclick="enviarCorreoRegistro(${per.id}, 'personas')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px;">📧 Correo</button>
-                    <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
+                        <button class="secondary" onclick="mostrarFormularioRegistro('${per.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
+                        <button onclick="borrarRegistroBase('${per.id}', 'personas')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button onclick="enviarCorreoRegistro('${per.id}', 'personas')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
+                        <button onclick="generarPDF('Ficha_Persona_${per.dni || per.nombre}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                    </div>
                 `;
 
                 document.getElementById('print-content').innerHTML = `
@@ -769,15 +769,19 @@
                     </div>
                 `;
             } else {
-                const veh = dbVehiculos.find(v => v.id === id);
+                const veh = dbVehiculos.find(v => String(v.id) === String(id));
                 if(!veh) return;
 
                 document.getElementById('details-action-bar').innerHTML = `
-                    <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px;">&larr; Volver</button>
-                    <button class="secondary" onclick="mostrarFormularioRegistro(${veh.id})" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                    <button onclick="borrarRegistroBase(${veh.id}, 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px;">X Borrar</button>
-                    <button onclick="enviarCorreoRegistro(${veh.id}, 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px;">📧 Correo</button>
-                    <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button class="secondary" onclick="mostrar('records-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
+                        <button class="secondary" onclick="mostrarFormularioRegistro('${veh.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
+                        <button onclick="borrarRegistroBase('${veh.id}', 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button onclick="enviarCorreoRegistro('${veh.id}', 'vehiculos')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
+                        <button onclick="generarPDF('Ficha_Vehiculo_${veh.mat}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️️ PDF</button>
+                    </div>
                 `;
 
                 document.getElementById('print-content').innerHTML = `
@@ -808,16 +812,15 @@
         function borrarRegistroBase(id, tipo) {
             if(confirm("¿Seguro que quieres borrar este registro permanentemente?")) {
                 if(tipo === 'personas') {
-                    dbPersonas = dbPersonas.filter(p => p.id !== id);
+                    dbPersonas = dbPersonas.filter(p => String(p.id) !== String(id));
                     localStorage.setItem('db_personas_v1', JSON.stringify(dbPersonas));
                 } else {
-                    dbVehiculos = dbVehiculos.filter(v => v.id !== id);
+                    dbVehiculos = dbVehiculos.filter(v => String(v.id) !== String(id));
                     localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
                 }
                 mostrar('records-screen');
             }
         }
-
 
         // ==========================================
         // MÓDULO NOTAS LIBRES
@@ -828,7 +831,7 @@
             if(!texto) return;
 
             if (editandoNotaId) {
-                const index = dbNotas.findIndex(n => n.id === editandoNotaId);
+                const index = dbNotas.findIndex(n => String(n.id) === String(editandoNotaId));
                 if (index !== -1) { dbNotas[index].texto = texto; dbNotas[index].actuante = actuante; }
                 alert("Nota actualizada.");
             } else {
@@ -841,7 +844,7 @@
         }
 
         function editarNota(id) {
-            const nota = dbNotas.find(n => n.id === id);
+            const nota = dbNotas.find(n => String(n.id) === String(id));
             if(!nota) return;
             editandoNotaId = id;
             document.getElementById('nuevaNota').value = nota.texto;
@@ -863,9 +866,9 @@
 
         function borrarNota(id) {
             if(confirm("¿Borrar esta nota permanentemente?")) {
-                dbNotas = dbNotas.filter(n => n.id !== id);
+                dbNotas = dbNotas.filter(n => String(n.id) !== String(id));
                 localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
-                cargarNotas();
+                mostrar('notes-screen');
             }
         }
 
@@ -886,9 +889,9 @@
                         <div class="card-header">
                             <span>🕒 ${fechaF}</span>
                             <div style="font-size: 16px;">
-                                <span style="cursor: pointer; padding: 0 8px;" onclick="imprimirNota(${nota.id})" title="Imprimir PDF">🖨️</span>
-                                <span style="cursor: pointer; padding: 0 8px;" onclick="editarNota(${nota.id})" title="Editar">✏️</span>
-                                <span style="color: #ff453a; font-weight: bold; cursor: pointer; padding: 0 8px;" onclick="borrarNota(${nota.id})" title="Borrar">X</span>
+                                <span style="cursor: pointer; padding: 0 8px;" onclick="imprimirNota('${nota.id}')" title="Imprimir PDF">🖨️</span>
+                                <span style="cursor: pointer; padding: 0 8px;" onclick="editarNota('${nota.id}')" title="Editar">✏️</span>
+                                <span style="color: #ff453a; font-weight: bold; cursor: pointer; padding: 0 8px;" onclick="borrarNota('${nota.id}')" title="Borrar">X</span>
                             </div>
                         </div>
                         <div style="white-space: pre-wrap; font-size: 15px; color: #fff;">${nota.texto}</div>
@@ -897,14 +900,19 @@
         }
 
         function imprimirNota(id) {
-            const nota = dbNotas.find(n => n.id === id);
+            const nota = dbNotas.find(n => String(n.id) === String(id));
             if(!nota) return;
 
             document.getElementById('details-action-bar').innerHTML = `
-                <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
-                <button class="secondary" onclick="editarNota(${nota.id}); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                <button onclick="enviarCorreoNota(${nota.id})" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #0a84ff; color: #fff; border-radius: 8px;">📧 Correo</button>
-                <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\//g,'-')}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button class="secondary" onclick="mostrar('notes-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
+                    <button class="secondary" onclick="editarNota('${nota.id}'); mostrar('notes-screen');" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
+                    <button onclick="borrarNota('${nota.id}')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                </div>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button onclick="enviarCorreoNota('${nota.id}')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
+                    <button onclick="generarPDF('Anotacion_${formateaFechaCorta(nota.fechaISO).replace(/\//g,'-')}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                </div>
             `;
 
             document.getElementById('print-content').innerHTML = `
@@ -927,7 +935,6 @@
             mostrar('details-screen');
         }
 
-
         // ==========================================
         // MÓDULO AVISOS / INTERVENCIONES
         // ==========================================
@@ -947,7 +954,7 @@
         }
 
         function editarAviso(id) {
-            const reg = db.find(r => r.id === id);
+            const reg = db.find(r => String(r.id) === String(id));
             if(!reg) return;
 
             editandoIntervencionId = id;
@@ -970,6 +977,14 @@
             actualizarListaImplicados();
             
             mostrar('form-screen');
+        }
+        
+        function borrarAviso(id) {
+            if(confirm("¿Seguro que quieres borrar esta intervención permanentemente?")) {
+                db = db.filter(r => String(r.id) !== String(id));
+                localStorage.setItem('db_policial_v3', JSON.stringify(db));
+                mostrar('search-screen');
+            }
         }
 
         function añadirImplicado(tipo) {
@@ -1021,7 +1036,7 @@
             if (!motivo) { alert("El motivo de la llamada es obligatorio."); return; }
             
             if (editandoIntervencionId) {
-                const index = db.findIndex(r => r.id === editandoIntervencionId);
+                const index = db.findIndex(r => String(r.id) === String(editandoIntervencionId));
                 if(index !== -1) {
                     db[index].fechaISO = document.getElementById('fechaHora').value;
                     db[index].telefono = document.getElementById('telefono').value.trim();
@@ -1039,7 +1054,7 @@
                 
             } else {
                 let nuevoID = 1;
-                if (db.length > 0) nuevoID = Math.max(...db.map(r => r.id)) + 1;
+                if (db.length > 0) nuevoID = Math.max(...db.map(r => Number(r.id))) + 1;
 
                 const nuevaIntervencion = {
                     id: nuevoID, fechaISO: document.getElementById('fechaHora').value,
@@ -1076,7 +1091,7 @@
                     if (contInt >= 20) break;
                     const reg = db[i];
                     const fechaFormateada = formateaFecha(reg.fechaISO);
-                    const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto(${reg.id})" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
+                    const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto('${reg.id}')" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
                     
                     htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
                             <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
@@ -1091,7 +1106,7 @@
                     if (contNot >= 20) break;
                     const nota = dbNotas[i];
                     const fechaFormateada = formateaFecha(nota.fechaISO);
-                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
+                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota('${nota.id}')">
                         <div class="card-header"><span>🕒 ${fechaFormateada}</span><span>📄 Ver</span></div>
                         <div style="white-space: pre-wrap; font-size: 14px; color: #d1d1d6;">${nota.texto}</div>
                     </div>`;
@@ -1106,16 +1121,14 @@
             }
 
             // MODO BÚSQUEDA GENERAL (Busca en TODAS las bases de datos)
-            
-            // 1. Buscar Fichas de Personas
             for (let i = dbPersonas.length - 1; i >= 0; i--) {
                 const p = dbPersonas[i];
                 if ((p.nombre && p.nombre.toUpperCase().includes(termino)) || 
                     (p.dni && p.dni.includes(termino)) || 
                     (p.vehMat && p.vehMat.includes(termino)) ||
                     (p.motivo && p.motivo.toUpperCase().includes(termino))) {
-                    htmlPer += `<div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto(${p.id}, 'personas')">
-                        <div class="card-header"><span style="color:#30d158; font-weight:bold;">🗂️ FICHA REGISTRO</span><span>PERSONA</span></div>
+                    htmlPer += `<div class="card" style="border-left-color: #30d158; cursor:pointer;" onclick="verRegistroCompleto('${p.id}', 'personas')">
+                        <div class="card-header"><span style="color:#30d158; font-weight:bold;">🗂️️ FICHA REGISTRO</span><span>PERSONA</span></div>
                         <div class="card-title">👤 ${p.nombre || 'Sin nombre'}</div>
                         <div class="card-detail"><b>DNI:</b> ${p.dni || '-'}</div>
                         <div class="card-detail"><b>Motivo:</b> ${p.motivo || '-'}</div>
@@ -1123,14 +1136,13 @@
                 }
             }
 
-            // 2. Buscar Fichas de Vehículos
             for (let i = dbVehiculos.length - 1; i >= 0; i--) {
                 const v = dbVehiculos[i];
                 if ((v.mat && v.mat.includes(termino)) || 
                     (v.marca && v.marca.toUpperCase().includes(termino)) || 
                     (v.titularDni && v.titularDni.includes(termino)) ||
                     (v.titular && v.titular.toUpperCase().includes(termino))) {
-                    htmlVeh += `<div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto(${v.id}, 'vehiculos')">
+                    htmlVeh += `<div class="card" style="border-left-color: #5e5ce6; cursor:pointer;" onclick="verRegistroCompleto('${v.id}', 'vehiculos')">
                         <div class="card-header"><span style="color:#5e5ce6; font-weight:bold;">🗂️ FICHA REGISTRO</span><span>VEHÍCULO</span></div>
                         <div class="card-title">🚗 ${v.mat || 'Sin matrícula'}</div>
                         <div class="card-detail"><b>Marca/Modelo:</b> ${v.marca} ${v.modelo}</div>
@@ -1139,12 +1151,11 @@
                 }
             }
 
-            // 3. Buscar Avisos / Intervenciones y sus Implicados
             for (let i = db.length - 1; i >= 0; i--) {
                 const reg = db[i];
                 let intervencionMostrada = false;
                 const fechaFormateada = formateaFecha(reg.fechaISO);
-                const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto(${reg.id})" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
+                const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto('${reg.id}')" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
 
                 if(reg.implicados && reg.implicados.length > 0) {
                     reg.implicados.forEach(imp => {
@@ -1184,12 +1195,11 @@
                 }
             }
 
-            // 4. Buscar Notas
             for (let i = dbNotas.length - 1; i >= 0; i--) {
                 const nota = dbNotas[i];
                 if(nota.texto.toUpperCase().includes(termino) || (nota.actuante && nota.actuante.toUpperCase().includes(termino))) {
                     const fechaFormateada = formateaFecha(nota.fechaISO);
-                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota(${nota.id})">
+                    htmlNot += `<div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota('${nota.id}')">
                         <div class="card-header"><span>🕒 ${fechaFormateada}</span><span>📄 Ver</span></div>
                         <div style="white-space: pre-wrap; font-size: 14px; color: #d1d1d6;">${nota.texto}</div>
                     </div>`;
@@ -1204,14 +1214,19 @@
         }
 
         function verAvisoCompleto(idIntervencion) {
-            const reg = db.find(r => r.id === idIntervencion);
+            const reg = db.find(r => String(r.id) === String(idIntervencion));
             if(!reg) return;
 
             document.getElementById('details-action-bar').innerHTML = `
-                <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px;">&larr; Volver</button>
-                <button class="secondary" onclick="editarAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
-                <button onclick="enviarCorreoAviso(${reg.id})" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #0a84ff; color: #fff; border-radius: 8px;">📧 Correo</button>
-                <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; margin: 0; background-color: #30d158; color: #000; border-radius: 8px;">🖨️ PDF</button>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button class="secondary" onclick="mostrar('search-screen')" style="flex: 1; padding: 8px 10px; border-radius: 8px; margin: 0;">&larr; Volver</button>
+                    <button class="secondary" onclick="editarAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #d4a373; color: #d4a373; margin: 0;">✏️ Editar</button>
+                    <button onclick="borrarAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #ff453a; color: #fff; border-radius: 8px; margin: 0;">X Borrar</button>
+                </div>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button onclick="enviarCorreoAviso('${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #0a84ff; color: #fff; border-radius: 8px; margin: 0;">📧 Correo</button>
+                    <button onclick="generarPDF('Informe_INT_${reg.id}')" style="flex: 1; padding: 8px 10px; background-color: #30d158; color: #000; border-radius: 8px; margin: 0;">🖨️ PDF</button>
+                </div>
             `;
 
             let htmlImplicados = '';
