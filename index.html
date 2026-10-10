@@ -9,22 +9,34 @@
     
     <style>
         /* ==================================================
-           CONFIGURACIÓN DEL FONDO POLICIAL (PNG)
+           CONFIGURACIÓN DEL FONDO POLICIAL (CAPA FANTASMA IOS)
            ================================================== */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-            background-color: #0d0d12; 
-            
-            /* Filtro oscuro + Imagen de fondo PNG */
-            background-image: linear-gradient(rgba(13, 13, 18, 0.85), rgba(13, 13, 18, 0.85)), url('fondo.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            
             color: #fff; 
             margin: 0; 
             padding: 20px; 
+            /* Asegura que el cuerpo siempre mida al menos el 100% de la pantalla */
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* Capa fija al fondo de la pantalla (Soluciona el bug de Safari) */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            height: 100dvh;
+            z-index: -1;
+            background-color: #0d0d12;
+            /* Filtro oscuro + Imagen de fondo PNG */
+            background-image: linear-gradient(rgba(13, 13, 18, 0.85), rgba(13, 13, 18, 0.85)), url('fondo.png?v=2');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         
         h2 { margin-top: 0; color: #fff; font-size: 18px; }
@@ -86,7 +98,9 @@
            MODO PDF DE ALTA COMPACTACIÓN (LETRAS MUY PEQUEÑAS)
            ================================================== */
         /* Importante: Elimina el fondo policial al generar el documento */
-        .pdf-mode { background-image: none !important; background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
+        .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
+        .pdf-mode::before { display: none !important; } /* APAGA LA CAPA FANTASMA EN PDF */
+        
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
@@ -106,6 +120,7 @@
 
         @media print {
             body { background-color: #fff !important; background-image: none !important; color: #000 !important; padding: 0; }
+            body::before { display: none !important; }
             .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
             #details-screen { display: block !important; }
         }
@@ -318,7 +333,6 @@
             const hasPin = localStorage.getItem('pin_policial');
             const hasPuk = localStorage.getItem('puk_policial');
             
-            // Si falta el PIN o el PUK obliga a configurarlo inmediatamente
             if (!hasPin || !hasPuk) {
                 document.getElementById('login-title').innerText = "Seguridad Actualizada";
                 document.getElementById('login-desc').innerText = "Crea un PIN y un código PUK de seguridad para proteger este dispositivo.";
@@ -326,7 +340,6 @@
                 document.getElementById('setup-fields').classList.remove('hidden');
                 document.getElementById('btn-olvido').classList.add('hidden');
                 
-                // Forzar reseteo si falta uno de los dos
                 localStorage.removeItem('pin_policial');
                 localStorage.removeItem('puk_policial');
             }
@@ -990,7 +1003,7 @@
             if(confirm("¿Seguro que quieres borrar este informe permanentemente?")) {
                 db = db.filter(r => String(r.id) !== String(id));
                 localStorage.setItem('db_policial_v3', JSON.stringify(db));
-                alert("Aviso borrado.");
+                alert("Aviso borrado con éxito.");
                 mostrar('search-screen');
             }
         }
