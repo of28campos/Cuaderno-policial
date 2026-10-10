@@ -8,7 +8,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #0d0d12; color: #fff; margin: 0; padding: 20px; }
+        /* ==================================================
+           CONFIGURACIÓN DEL FONDO POLICIAL (PNG)
+           ================================================== */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: #0d0d12; 
+            
+            /* Filtro oscuro + Imagen de fondo PNG */
+            background-image: linear-gradient(rgba(13, 13, 18, 0.85), rgba(13, 13, 18, 0.85)), url('fondo.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            
+            color: #fff; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        
         h2 { margin-top: 0; color: #fff; font-size: 18px; }
         
         input, select, button, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #2c2c2e; font-size: 15px; box-sizing: border-box; background-color: #151518; color: #fff; }
@@ -26,13 +44,13 @@
         .input-row { display: flex; gap: 10px; }
         .btn-gps { width: auto; background-color: #2c2c2e; color: #d4a373; padding: 0 15px; margin-bottom: 15px; font-weight: bold; }
         
-        .card { background-color: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #d4a373; }
+        .card { background-color: rgba(28, 28, 30, 0.95); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #d4a373; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card-header { font-size: 12px; color: #8e8e93; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .card-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
         .card-detail { font-size: 14px; color: #d1d1d6; margin-bottom: 4px; }
         .relation-box { background-color: #2c2c2e; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 13px; border-left: 2px solid #30d158; }
         
-        .section-title { color: #8e8e93; font-size: 14px; margin: 20px 0 10px 0; border-bottom: 1px solid #2c2c2e; padding-bottom: 5px; }
+        .section-title { color: #d4a373; font-weight: bold; font-size: 14px; margin: 20px 0 10px 0; border-bottom: 1px solid #2c2c2e; padding-bottom: 5px; text-shadow: 1px 1px 2px #000; }
         .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 5px; background-color: #333; }
         .badge-veh { color: #5e5ce6; background-color: rgba(94, 92, 230, 0.2); }
         .badge-per { color: #30d158; background-color: rgba(48, 209, 88, 0.2); }
@@ -64,8 +82,11 @@
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
-        /* MODO PDF DE ALTA COMPACTACIÓN */
-        .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
+        /* ==================================================
+           MODO PDF DE ALTA COMPACTACIÓN (LETRAS MUY PEQUEÑAS)
+           ================================================== */
+        /* Importante: Elimina el fondo policial al generar el documento */
+        .pdf-mode { background-image: none !important; background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
@@ -84,8 +105,8 @@
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
-            body { background-color: #fff; color: #000; padding: 0; }
-            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
+            body { background-color: #fff !important; background-image: none !important; color: #000 !important; padding: 0; }
+            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
             #details-screen { display: block !important; }
         }
     </style>
@@ -93,30 +114,32 @@
 <body>
 
     <div id="login-screen">
-        <h2 id="login-title">Identificación Operativa</h2>
-        <p id="login-desc" style="font-size: 13px; color: #8e8e93; margin-bottom: 15px;">Introduce tu PIN de acceso.</p>
-        
-        <input type="password" id="pinInput" placeholder="Introduce PIN" inputmode="numeric" pattern="[0-9]*">
-        
-        <!-- CAMPOS PARA CREAR PUK -->
-        <div id="setup-fields" class="hidden">
-            <input type="password" id="pukInput" placeholder="Crea un PUK (Nº placa o palabra)">
-            <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
-        </div>
+        <div style="background-color: rgba(21, 21, 24, 0.85); padding: 20px; border-radius: 12px; border: 1px solid #2c2c2e; margin-top: 20px;">
+            <h2 id="login-title">Identificación Operativa</h2>
+            <p id="login-desc" style="font-size: 13px; color: #d1d1d6; margin-bottom: 15px;">Introduce tu PIN de acceso.</p>
+            
+            <input type="password" id="pinInput" placeholder="Introduce PIN" inputmode="numeric" pattern="[0-9]*">
+            
+            <!-- CAMPOS PARA CREAR PUK -->
+            <div id="setup-fields" class="hidden">
+                <input type="password" id="pukInput" placeholder="Crea un PUK (Nº placa o palabra)">
+                <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
+            </div>
 
-        <!-- CAMPOS PARA RECUPERAR PIN -->
-        <div id="recovery-fields" class="hidden">
-            <input type="password" id="pukRecoveryInput" placeholder="Introduce tu código PUK">
-            <button onclick="recuperarPin()" style="background-color: #5e5ce6; color: #fff;">Validar PUK</button>
-            <button class="secondary" onclick="volverLogin()">Cancelar</button>
-        </div>
+            <!-- CAMPOS PARA RECUPERAR PIN -->
+            <div id="recovery-fields" class="hidden">
+                <input type="password" id="pukRecoveryInput" placeholder="Introduce tu código PUK">
+                <button onclick="recuperarPin()" style="background-color: #5e5ce6; color: #fff;">Validar PUK</button>
+                <button class="secondary" onclick="volverLogin()">Cancelar</button>
+            </div>
 
-        <div id="login-buttons">
-            <button onclick="acceder()">Entrar</button>
-            <button id="btn-olvido" class="secondary" onclick="mostrarRecuperacion()" style="margin-top: 15px; background-color: transparent; border: 1px solid #2c2c2e; font-size: 14px;">Olvidé mi PIN</button>
+            <div id="login-buttons">
+                <button onclick="acceder()">Entrar</button>
+                <button id="btn-olvido" class="secondary" onclick="mostrarRecuperacion()" style="margin-top: 15px; background-color: transparent; border: 1px solid #2c2c2e; font-size: 14px;">Olvidé mi PIN</button>
+            </div>
+            
+            <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
         </div>
-        
-        <p id="loginError" style="color: #ff453a; display: none; font-size: 14px;">PIN incorrecto.</p>
     </div>
 
     <div id="main-screen" class="hidden">
@@ -125,7 +148,6 @@
         <button onclick="mostrar('records-screen')" style="background-color: #5e5ce6; color: #fff;">🗂️ Registro de Identificaciones</button>
         <button onclick="mostrar('notes-screen')" style="background-color: #30d158; color: #000;">📝 Bloc de Notas</button>
         <button onclick="mostrar('search-screen')">🔍 Buscador e Historial</button>
-        <!-- BOTÓN NORMATIVA ELIMINADO -->
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
 
@@ -310,7 +332,6 @@
             }
         })();
 
-        // --- BASES DE DATOS GLOBALES ---
         let db = JSON.parse(localStorage.getItem('db_policial_v3')) || [];
         let dbNotas = JSON.parse(localStorage.getItem('db_notas_v1')) || [];
         let dbPersonas = JSON.parse(localStorage.getItem('db_personas_v1')) || [];
@@ -462,7 +483,7 @@
             }
         }
 
-        // --- GENERADOR PDF DE ALTA CALIDAD ---
+        // --- GENERADOR PDF ---
         async function generarPDF(nombreArchivo) {
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
@@ -534,7 +555,6 @@
             let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
             window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
         }
-
 
         // ==========================================
         // MÓDULO REGISTROS (PERSONAS / VEHÍCULOS)
@@ -855,7 +875,7 @@
         }
 
         function borrarNota(id) {
-            if(confirm("¿Seguro que quieres borrar esta nota permanentemente?")) {
+            if(confirm("¿Borrar esta nota permanentemente?")) {
                 dbNotas = dbNotas.filter(n => String(n.id) !== String(id));
                 localStorage.setItem('db_notas_v1', JSON.stringify(dbNotas));
                 alert("Nota borrada con éxito.");
@@ -876,13 +896,10 @@
                 mostrados++;
                 const fechaF = formateaFecha(nota.fechaISO);
                 div.innerHTML += `
-                    <div class="card" style="border-left-color: #30d158;">
+                    <div class="card" style="border-left-color: #30d158; cursor: pointer;" onclick="imprimirNota('${nota.id}')">
                         <div class="card-header">
                             <span>🕒 ${fechaF}</span>
-                            <div style="font-size: 16px;">
-                                <span style="cursor: pointer; padding: 0 8px;" onclick="imprimirNota('${nota.id}')" title="Imprimir PDF">🖨️</span>
-                                <span style="cursor: pointer; padding: 0 8px;" onclick="editarNota('${nota.id}')" title="Editar">✏️</span>
-                            </div>
+                            <div style="font-size: 16px;"><span>📄 Ver</span></div>
                         </div>
                         <div style="white-space: pre-wrap; font-size: 15px; color: #fff;">${nota.texto}</div>
                     </div>`;
@@ -973,7 +990,7 @@
             if(confirm("¿Seguro que quieres borrar este informe permanentemente?")) {
                 db = db.filter(r => String(r.id) !== String(id));
                 localStorage.setItem('db_policial_v3', JSON.stringify(db));
-                alert("Informe borrado con éxito.");
+                alert("Aviso borrado.");
                 mostrar('search-screen');
             }
         }
@@ -1061,6 +1078,9 @@
             }
         }
 
+        // ==========================================
+        // BUSCADOR GENERAL (Avisos, Notas y Registros)
+        // ==========================================
         function ejecutarBusqueda() {
             const termino = document.getElementById('busqueda').value.toUpperCase();
             const divVeh = document.getElementById('resultados-vehiculos');
@@ -1074,18 +1094,16 @@
             let contInt = 0, contNot = 0;
 
             if (!termino) {
-                // MODO HISTORIAL POR DEFECTO (AVISOS Y NOTAS RECIENTES)
+                // MODO HISTORIAL POR DEFECTO
                 for (let i = db.length - 1; i >= 0; i--) {
                     if (contInt >= 20) break;
                     const reg = db[i];
                     const fechaFormateada = formateaFecha(reg.fechaISO);
-                    const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto('${reg.id}')" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
                     
-                    htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
+                    htmlInt += `<div class="card" style="border-left-color: #8e8e93; cursor:pointer;" onclick="verAvisoCompleto('${reg.id}')">
                             <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
-                            <div class="card-title">📞 Aviso: ${reg.motivo}</div>
+                            <div class="card-title">📞 ${reg.motivo}</div>
                             <div class="card-detail"><b>Lugar:</b> ${reg.lugar || 'No consta'}</div>
-                            ${botonDetalle}
                         </div>`;
                     contInt++;
                 }
@@ -1104,6 +1122,7 @@
                 if(htmlInt) divInt.innerHTML = `<div class="section-title">ÚLTIMOS AVISOS (HISTORIAL)</div>` + htmlInt;
                 if(htmlNot) divNot.innerHTML = `<div class="section-title">ÚLTIMAS NOTAS (HISTORIAL)</div>` + htmlNot;
                 if(!htmlInt && !htmlNot) divInt.innerHTML = '<p style="color:#8e8e93; font-size: 14px; text-align: center;">El historial está vacío.</p>';
+                
                 return;
             }
 
@@ -1142,7 +1161,6 @@
                 const reg = db[i];
                 let intervencionMostrada = false;
                 const fechaFormateada = formateaFecha(reg.fechaISO);
-                const botonDetalle = `<button class="secondary" onclick="verAvisoCompleto('${reg.id}')" style="width: 100%; border: 1px solid #d4a373; color: #d4a373; margin-top: 12px; font-size: 14px;">📄 Ver Aviso Completo</button>`;
 
                 if(reg.implicados && reg.implicados.length > 0) {
                     reg.implicados.forEach(imp => {
@@ -1154,13 +1172,12 @@
                                 otrosImplicados.forEach(o => { relacionadosHtml += `↳ ${o.tipo === 'persona' ? 'Persona' : 'Vehículo'}: ${o.dato} (${o.nota})<br>`; });
                                 relacionadosHtml += `</div>`;
                             }
-                            const tarjeta = `<div class="card" style="border-left-color: #d4a373;">
+                            const tarjeta = `<div class="card" style="border-left-color: #d4a373; cursor:pointer;" onclick="verAvisoCompleto('${reg.id}')">
                                     <div class="card-header"><span>📞 AVISO #${reg.id}</span><span>${fechaFormateada}</span></div>
                                     <div class="card-title"><span class="badge ${imp.tipo === 'vehiculo' ? 'badge-veh' : 'badge-per'}">${imp.tipo === 'vehiculo' ? 'VEHÍCULO' : 'PERSONA'}</span> ${imp.dato}</div>
                                     <div class="card-detail"><b>Detalles:</b> ${imp.nota}</div>
                                     <div class="card-detail"><b>Motivo Aviso:</b> ${reg.motivo}</div>
                                     ${relacionadosHtml}
-                                    ${botonDetalle}
                                 </div>`;
                             if(imp.tipo === 'vehiculo') htmlVeh += tarjeta; else htmlPer += tarjeta;
                             intervencionMostrada = true;
@@ -1172,11 +1189,10 @@
                     if((reg.motivo && reg.motivo.toUpperCase().includes(termino)) || (reg.lugar && reg.lugar.toUpperCase().includes(termino)) ||
                        (reg.observaciones && reg.observaciones.toUpperCase().includes(termino)) || (reg.telefono && reg.telefono.includes(termino)) ||
                        (reg.comunicante && reg.comunicante.toUpperCase().includes(termino)) || (reg.actuantes && reg.actuantes.toUpperCase().includes(termino))) {
-                        htmlInt += `<div class="card" style="border-left-color: #8e8e93;">
+                        htmlInt += `<div class="card" style="border-left-color: #8e8e93; cursor:pointer;" onclick="verAvisoCompleto('${reg.id}')">
                                 <div class="card-header"><span>INT #${reg.id}</span><span>${fechaFormateada}</span></div>
                                 <div class="card-title">📞 Aviso: ${reg.motivo}</div>
                                 <div class="card-detail"><b>Lugar:</b> ${reg.lugar}</div>
-                                ${botonDetalle}
                             </div>`;
                     }
                 }
@@ -1204,7 +1220,6 @@
             const reg = db.find(r => String(r.id) === String(idIntervencion));
             if(!reg) return;
 
-            // BOTONERA MEJORADA PARA INTERVENCIONES
             document.getElementById('details-action-bar').innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <button class="secondary" onclick="mostrar('search-screen')" style="margin:0;">&larr; Volver</button>
