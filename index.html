@@ -32,8 +32,8 @@
             height: 100dvh;
             z-index: -1;
             background-color: #0d0d12;
-            /* Filtro oscuro + Imagen de fondo PNG */
-            background-image: linear-gradient(rgba(13, 13, 18, 0.85), rgba(13, 13, 18, 0.85)), url('fondo.png?v=2');
+            /* Filtro oscuro + Imagen de fondo PNG (Actualizado v3) */
+            background-image: linear-gradient(rgba(13, 13, 18, 0.85), rgba(13, 13, 18, 0.85)), url('fondo.png?v=3');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -333,6 +333,7 @@
             const hasPin = localStorage.getItem('pin_policial');
             const hasPuk = localStorage.getItem('puk_policial');
             
+            // Si falta el PIN o el PUK obliga a configurarlo inmediatamente
             if (!hasPin || !hasPuk) {
                 document.getElementById('login-title').innerText = "Seguridad Actualizada";
                 document.getElementById('login-desc').innerText = "Crea un PIN y un código PUK de seguridad para proteger este dispositivo.";
@@ -340,6 +341,7 @@
                 document.getElementById('setup-fields').classList.remove('hidden');
                 document.getElementById('btn-olvido').classList.add('hidden');
                 
+                // Forzar reseteo si falta uno de los dos
                 localStorage.removeItem('pin_policial');
                 localStorage.removeItem('puk_policial');
             }
@@ -496,7 +498,7 @@
             }
         }
 
-        // --- GENERADOR PDF ---
+        // --- GENERADOR PDF DE ALTA CALIDAD ---
         async function generarPDF(nombreArchivo) {
             const elemento = document.getElementById('print-content');
             const btnContainer = document.getElementById('details-action-bar');
@@ -568,6 +570,7 @@
             let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
             window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
         }
+
 
         // ==========================================
         // MÓDULO REGISTROS (PERSONAS / VEHÍCULOS)
