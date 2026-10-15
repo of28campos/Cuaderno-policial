@@ -91,31 +91,45 @@
         .actuantes-line { font-weight: bold; font-size: 16px; border-top: 1px solid #2c2c2e; display: inline-block; padding-top: 10px; min-width: 200px; text-align: center; }
         .implicado-extras { color: #d1d1d6; font-size: 14px; margin-top: 5px; }
 
-        /* MODO PDF DE ALTA COMPACTACIÓN */
+        /* ==================================================
+           MODO PDF: CABECERA GIGANTE + CUERPO COMPACTO
+           ================================================== */
         .pdf-mode { background-color: #fff !important; color: #000 !important; font-size: 10px !important; }
         .pdf-mode::before { display: none !important; } 
         
         .pdf-mode * { color: #000 !important; line-height: 1.2 !important; }
+        
+        /* CABECERA ESCALA OFICIAL */
+        .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; padding-bottom: 15px !important; margin-bottom: 15px !important; align-items: center !important; }
+        .pdf-mode .pdf-header-left { align-items: center !important; }
+        /* Aumento radical del tamaño del escudo */
+        .pdf-mode .pdf-header img { width: 250px !important; height: auto !important; max-height: 120px !important; margin-right: 25px !important; object-fit: contain !important; }
+        /* Aumento del título */
+        .pdf-mode .pdf-header h2 { font-size: 22px !important; margin-bottom: 5px !important; text-transform: uppercase !important; letter-spacing: 1px !important; font-weight: 800 !important; }
+        /* Aumento del expediente y fecha en cabecera */
+        .pdf-mode .pdf-header-right { color: #000 !important; font-size: 16px !important; font-weight: bold !important; }
+        .pdf-mode .pdf-header-left > div > div { font-size: 14px !important; color: #555 !important; }
+
+        /* CUERPO COMPACTO (Para ahorrar espacio en el folio) */
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
-        .pdf-mode .pdf-header { border-bottom: 1px solid #000 !important; padding-bottom: 6px !important; margin-bottom: 8px !important; }
-        .pdf-mode .pdf-header h2 { font-size: 14px !important; margin-bottom: 2px !important; }
-        .pdf-mode .pdf-header-right { color: #000 !important; font-size: 12px !important; }
-        .pdf-mode .pdf-header img { width: 100px !important; height: auto !important; max-height: 60px !important; margin-right: 15px !important; object-fit: contain !important; }
+        
         .pdf-mode .implicado-box { background-color: #f9f9f9 !important; border: 1px solid #ddd !important; padding: 6px !important; margin-bottom: 4px !important; font-size: 10px !important; }
         .pdf-mode .implicado-box div { font-size: 10px !important; }
         .pdf-mode .implicado-extras { color: #333 !important; font-size: 9px !important; margin-top: 2px !important; }
-        .pdf-mode .actuantes-box { margin-top: 15px !important; }
-        .pdf-mode .actuantes-box div { font-size: 9px !important; }
-        .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 11px !important; padding-top: 4px !important; margin-top: 2px !important; }
+        
+        .pdf-mode .actuantes-box { margin-top: 25px !important; }
+        .pdf-mode .actuantes-box div { font-size: 11px !important; }
+        .pdf-mode .actuantes-line { border-top: 1px solid #000 !important; font-size: 13px !important; padding-top: 6px !important; margin-top: 4px !important; }
+        
         .pdf-mode .no-print { display: none !important; }
         .page-protect { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
             body { background-color: #fff !important; background-image: none !important; color: #000 !important; padding: 0; }
             body::before { display: none !important; }
-            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
+            .no-print, button, #login-screen, #main-screen, #form-screen, #search-screen, #tools-screen, #notes-screen, #records-screen, #record-form-screen { display: none !important; }
             #details-screen { display: block !important; }
         }
     </style>
@@ -129,13 +143,11 @@
             
             <input type="password" id="pinInput" placeholder="Introduce PIN" inputmode="numeric" pattern="[0-9]*">
             
-            <!-- CAMPOS PARA CREAR PUK -->
             <div id="setup-fields" class="hidden">
                 <input type="password" id="pukInput" placeholder="Crea un PUK (Nº placa o palabra)">
                 <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
             </div>
 
-            <!-- CAMPOS PARA RECUPERAR PIN -->
             <div id="recovery-fields" class="hidden">
                 <input type="password" id="pukRecoveryInput" placeholder="Introduce tu código PUK">
                 <button onclick="recuperarPin()" style="background-color: #5e5ce6; color: #fff;">Validar PUK</button>
@@ -302,7 +314,7 @@
         <button id="btn-guardar-aviso" onclick="guardarAviso()" style="font-size: 18px; padding: 16px; margin-top: 10px;">Guardar Aviso</button>
     </div>
 
-    <!-- BUSCADOR E HISTORIAL DE AVISOS Y NOTAS -->
+    <!-- BUSCADOR E HISTORIAL -->
     <div id="search-screen" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2>Buscador e Historial</h2>
@@ -491,7 +503,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Convertir a JPEG comprimido al 60%
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
                         
                         preview.src = dataUrl;
@@ -599,7 +610,6 @@
             window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
         }
 
-
         // ==========================================
         // MÓDULO REGISTROS (PERSONAS / VEHÍCULOS)
         // ==========================================
@@ -704,7 +714,7 @@
                 }
                 
                 if (!guardarEnLocal('db_personas_v1', dbPersonas)) {
-                    if(!editandoRegistroId) dbPersonas.pop(); // Revertir si hay error de memoria
+                    if(!editandoRegistroId) dbPersonas.pop(); 
                     return;
                 }
 
@@ -805,7 +815,9 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <h2>FICHA DE IDENTIFICACIÓN PERSONAL</h2>
+                            <div>
+                                <h2>FICHA DE IDENTIFICACIÓN PERSONAL</h2>
+                            </div>
                         </div>
                     </div>
                     ${per.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
@@ -849,7 +861,9 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <h2>FICHA DE VEHÍCULO</h2>
+                            <div>
+                                <h2>FICHA DE VEHÍCULO</h2>
+                            </div>
                         </div>
                     </div>
                     ${veh.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
@@ -874,10 +888,10 @@
             if(confirm("¿Seguro que quieres borrar este registro permanentemente?")) {
                 if(tipo === 'personas') {
                     dbPersonas = dbPersonas.filter(p => String(p.id) !== String(id));
-                    guardarEnLocal('db_personas_v1', dbPersonas);
+                    localStorage.setItem('db_personas_v1', JSON.stringify(dbPersonas));
                 } else {
                     dbVehiculos = dbVehiculos.filter(v => String(v.id) !== String(id));
-                    guardarEnLocal('db_vehiculos_v1', dbVehiculos);
+                    localStorage.setItem('db_vehiculos_v1', JSON.stringify(dbVehiculos));
                 }
                 alert("✅ Registro borrado con éxito.");
                 mostrar('records-screen');
