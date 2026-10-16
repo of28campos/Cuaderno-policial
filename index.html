@@ -30,7 +30,7 @@
             height: 100dvh;
             z-index: -1;
             background-color: #0d0d12;
-            background-image: linear-gradient(rgba(13, 13, 18, 0.65), rgba(13, 13, 18, 0.65)), url('fondo.png?v=5');
+            background-image: linear-gradient(rgba(13, 13, 18, 0.65), rgba(13, 13, 18, 0.65)), url('fondo.png?v=6');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -102,15 +102,12 @@
         /* CABECERA ESCALA OFICIAL */
         .pdf-mode .pdf-header { border-bottom: 2px solid #000 !important; padding-bottom: 15px !important; margin-bottom: 15px !important; align-items: center !important; }
         .pdf-mode .pdf-header-left { align-items: center !important; }
-        /* Aumento radical del tamaño del escudo */
         .pdf-mode .pdf-header img { width: 250px !important; height: auto !important; max-height: 120px !important; margin-right: 25px !important; object-fit: contain !important; }
-        /* Aumento del título */
         .pdf-mode .pdf-header h2 { font-size: 22px !important; margin-bottom: 5px !important; text-transform: uppercase !important; letter-spacing: 1px !important; font-weight: 800 !important; }
-        /* Aumento del expediente y fecha en cabecera */
         .pdf-mode .pdf-header-right { color: #000 !important; font-size: 16px !important; font-weight: bold !important; }
         .pdf-mode .pdf-header-left > div > div { font-size: 14px !important; color: #555 !important; }
 
-        /* CUERPO COMPACTO (Para ahorrar espacio en el folio) */
+        /* CUERPO COMPACTO */
         .pdf-mode .detalle-bloque { background-color: #fff !important; border: 1px solid #ccc !important; padding: 6px 10px !important; margin-bottom: 6px !important; font-size: 10px !important; }
         .pdf-mode .detalle-item { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode .detalle-label { color: #555 !important; font-size: 8px !important; margin-bottom: 0px !important; }
@@ -143,11 +140,13 @@
             
             <input type="password" id="pinInput" placeholder="Introduce PIN" inputmode="numeric" pattern="[0-9]*">
             
+            <!-- CAMPOS PARA CREAR PUK -->
             <div id="setup-fields" class="hidden">
                 <input type="password" id="pukInput" placeholder="Crea un PUK (Nº placa o palabra)">
                 <p style="font-size: 11px; color: #d4a373; margin-top: -5px; margin-bottom: 15px;">El PUK servirá para recuperar tus datos si olvidas el PIN.</p>
             </div>
 
+            <!-- CAMPOS PARA RECUPERAR PIN -->
             <div id="recovery-fields" class="hidden">
                 <input type="password" id="pukRecoveryInput" placeholder="Introduce tu código PUK">
                 <button onclick="recuperarPin()" style="background-color: #5e5ce6; color: #fff;">Validar PUK</button>
@@ -167,7 +166,7 @@
         <h2>Gestión Operativa</h2>
         <button onclick="prepararNuevoAviso()">📞 Registrar Llamada / Aviso</button>
         <button onclick="mostrar('records-screen')" style="background-color: #5e5ce6; color: #fff;">🗂️ Registro de Identificaciones</button>
-        <button onclick="mostrar('notes-screen')" style="background-color: #30d158; color: #000;">📝 Bloc de Notas</button>
+        <button onclick="abrirNotas()" style="background-color: #30d158; color: #000;">📝 Bloc de Notas</button>
         <button onclick="mostrar('search-screen')">🔍 Buscador e Historial</button>
         <button class="secondary" onclick="cerrarSesion()" style="margin-top: 30px; background-color: #1c1c1e;">Cerrar Sesión</button>
     </div>
@@ -334,7 +333,7 @@
     </div>
 
     <script>
-        // --- CONTROL DE INICIO, PIN Y RECUPERACIÓN (PUK) AUTOEJECUTABLE ---
+        // --- CONTROL DE INICIO, PIN Y RECUPERACIÓN (PUK) ---
         (function initSecurity() {
             const hasPin = localStorage.getItem('pin_policial');
             const hasPuk = localStorage.getItem('puk_policial');
@@ -434,6 +433,7 @@
         }
 
         // --- NAVEGACIÓN Y UTILIDADES ---
+        // IMPORTANTE: Al entrar en "notas-screen" no limpiamos la edición para que el usuario pueda editar.
         function mostrar(pantalla) {
             document.querySelectorAll('body > div').forEach(div => {
                 if(div.id !== 'print-content') div.classList.add('hidden');
@@ -441,8 +441,14 @@
             document.getElementById(pantalla).classList.remove('hidden');
             
             if(pantalla === 'search-screen') ejecutarBusqueda(); 
-            if(pantalla === 'notes-screen') { cancelarEdicionNota(); cargarNotas(); }
+            if(pantalla === 'notes-screen') { cargarNotas(); } 
             if(pantalla === 'records-screen') { ejecutarBusquedaRegistros(); }
+        }
+
+        // Esta función se llama desde el botón de inicio "Bloc de Notas" para entrar limpio.
+        function abrirNotas() {
+            cancelarEdicionNota();
+            mostrar('notes-screen');
         }
 
         function configurarFechaActual() {
@@ -487,7 +493,7 @@
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // REDUCCIÓN RADICAL PARA EVITAR SATURAR MEMORIA
+                        const MAX_WIDTH = 800; 
                         const MAX_HEIGHT = 800;
                         let width = img.width;
                         let height = img.height;
@@ -609,6 +615,7 @@
             let body = `ANOTACIÓN OPERATIVA\nFecha: ${formateaFecha(nota.fechaISO)}\n\n${nota.texto}\n\nAgente Actuante: ${nota.actuante || '-'}`;
             window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
         }
+
 
         // ==========================================
         // MÓDULO REGISTROS (PERSONAS / VEHÍCULOS)
@@ -815,9 +822,7 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <div>
-                                <h2>FICHA DE IDENTIFICACIÓN PERSONAL</h2>
-                            </div>
+                            <h2>FICHA DE IDENTIFICACIÓN PERSONAL</h2>
                         </div>
                     </div>
                     ${per.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${per.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
@@ -861,9 +866,7 @@
                     <div class="pdf-header" style="justify-content: flex-start;">
                         <div class="pdf-header-left">
                             <img src="escudo.png" alt="Escudo" onerror="this.style.display='none'">
-                            <div>
-                                <h2>FICHA DE VEHÍCULO</h2>
-                            </div>
+                            <h2>FICHA DE VEHÍCULO</h2>
                         </div>
                     </div>
                     ${veh.foto ? `<div class="page-protect" style="text-align:center; margin-bottom:15px;"><img src="${veh.foto}" style="max-height:200px; border-radius:8px;"></div>` : ''}
@@ -933,6 +936,9 @@
             document.getElementById('btn-guardar-nota').innerText = "Actualizar Nota";
             document.getElementById('btn-guardar-nota').style.backgroundColor = "#ffcc00"; 
             document.getElementById('btn-cancelar-nota').classList.remove('hidden');
+            
+            // Forzamos mostrar la pantalla para que el usuario pueda escribir
+            mostrar('notes-screen');
             window.scrollTo(0, 0); 
         }
 
@@ -984,7 +990,7 @@
             document.getElementById('details-action-bar').innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <button class="secondary" onclick="mostrar('notes-screen')" style="margin:0;">&larr; Volver</button>
-                    <button class="secondary" onclick="editarNota('${nota.id}'); mostrar('notes-screen');" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
+                    <button class="secondary" onclick="editarNota('${nota.id}')" style="margin:0; border: 1px solid #d4a373; color: #d4a373;">✏️ Editar</button>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <button onclick="enviarCorreoNota('${nota.id}')" style="margin:0; background-color: #0a84ff; color: #fff;">📧 Correo</button>
